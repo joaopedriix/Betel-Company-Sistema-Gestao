@@ -69,19 +69,15 @@ Para cada módulo acima, quando detalhado, preencher:
     Dashboard).
 
 - **Dúvidas pendentes:**
-  - Conteúdo item a item de cada checklist original ainda não foi
-    transcrito do material físico do cliente — necessário para popular os
-    templates reais (sem isso, o "item" fica genérico).
   - Regras exatas de quais serviços vendidos disparam quais
-    itens/templates.
+    itens/templates (por ora há só um template, de casamento — ver
+    `04-checklists-e-rotinas-operacionais.md`).
   - Quem pode criar/editar templates (qual perfil de acesso).
   - Um item pode ter mais de um responsável ou só um?
   - O progresso do checklist aparece no Portal do Cliente ou é só uso
     interno da equipe?
 
 - **Riscos de implementação:**
-  - Modelar o "item de checklist" de forma genérica demais antes de ter o
-    conteúdo real transcrito pode exigir retrabalho de schema depois.
   - Se a regra de personalização por serviço não for respeitada desde o
     modelo de dados, o checklist volta a virar lista fixa igual para todo
     evento — o que o cliente já disse que não quer.
@@ -89,7 +85,68 @@ Para cada módulo acima, quando detalhado, preencher:
     evidência é anexada) e em Transparência (como atraso é sinalizado) —
     não deve ser desenhado isoladamente dos outros dois.
 
-- **Status:** apenas detalhamento documental nesta etapa. Nenhum schema,
-  tela ou funcionalidade foi criada.
+### Modelo de dados conceitual — Checklists
+
+> Nível conceitual (entidades, campos, relações), para orientar a futura
+> validação de arquitetura em `06-referencia-arquitetura-supabase.md`.
+> **Não é schema definitivo** — nenhuma tabela, migration ou banco foi
+> criado a partir disto.
+
+**ChecklistTemplate** (o "molde", ex.: "Conferência Final — Casamento")
+- `id`
+- `nome`
+- `tipoEvento` (hoje só "casamento"; pendente decidir se vira catálogo
+  aberto de tipos de serviço)
+- `ativo`
+
+**ChecklistTemplateCategoria** (ex.: "Cerimônia", "Recepção")
+- `id`
+- `templateId` → ChecklistTemplate
+- `nome`
+- `ordem`
+
+**ChecklistTemplateItem** (o item padrão dentro de uma categoria)
+- `id`
+- `categoriaId` → ChecklistTemplateCategoria
+- `descricao`
+- `ordem`
+- `ativoPorPadrao` (se vem marcado ao instanciar, mas pode ser desativado
+  no evento específico — é o que viabiliza a personalização)
+
+**ChecklistEvento** (checklist já instanciado para um evento real)
+- `id`
+- `eventoId` → Evento (módulo Eventos e Agenda)
+- `templateOrigemId` → ChecklistTemplate
+
+**ChecklistEventoItem** (item de fato executado naquele evento)
+- `id`
+- `checklistEventoId` → ChecklistEvento
+- `templateItemOrigemId` → ChecklistTemplateItem (opcional — permite item
+  avulso adicionado só para aquele evento, fora do template)
+- `descricao` (copiada do template no momento da instanciação)
+- `ativo` (permite desativar item irrelevante para aquele evento)
+- `status` (pendente / em_andamento / concluído)
+- `responsavelId` → Usuário (pendente: 1 ou N responsáveis por item)
+- `prazo`
+- `observacoes`
+- `concluidoEm`, `concluidoPor`
+
+**Relação com Anexos e Provas:** cada `ChecklistEventoItem` pode ter N
+anexos (evidência) — a entidade exata de Anexo será definida quando esse
+módulo for detalhado.
+
+**Decisão de design a validar com você:** `ChecklistEventoItem` copia a
+descrição do template em vez de só referenciar — assim, se o template for
+editado depois, checklists de eventos já em andamento ou concluídos não
+mudam retroativamente (preserva o que realmente foi executado naquele
+evento, importante para o Portal do Cliente e para auditoria).
+
+**Ainda em aberto, não resolvido por este modelo:**
+- Multiempresa/multitenancy (se `ChecklistTemplate` é global ou por marca
+  — Betel Noivas / Betel Eventos / BTU / etc.).
+- Perfis de acesso (quem edita template vs. quem só executa).
+
+- **Status:** apenas detalhamento documental e modelo conceitual nesta
+  etapa. Nenhum schema, migration, banco ou tela foi criado.
 
 Demais módulos ainda não detalhados nesta etapa.
