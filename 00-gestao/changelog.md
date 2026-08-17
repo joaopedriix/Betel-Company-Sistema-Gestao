@@ -114,3 +114,23 @@ restante do MVP funcional (cadastros, contratos, checklist automático,
 progresso, dashboard) ainda não existe — telas são stubs. Nenhum dado
 fictício encontrado; tudo que existe é real e testado, o que falta está
 claramente marcado como ausente.
+
+**Alteração:** Planejamento (análise + proposta, nada executado) de
+arquitetura multitenant — decisão de produto confirmada pelo usuário:
+multiempresa desde o MVP, Betel como primeiro tenant, sem billing
+**Arquivos:** `04-analises/decisoes-do-mvp.md` (atualizado),
+`04-analises/arquitetura-multitenant.md` (novo — análise do schema atual
++ modelo proposto + policies propostas + auditoria de `service_role`),
+`04-analises/plano-migration-tenant.md` (novo),
+`04-analises/testes-isolamento-tenant.md` (novo),
+`03-projeto-betel/database/proposals/0002_multitenant.sql` (novo — SQL
+de proposta, fora do fluxo de deploy, não executado)
+**Motivo:** Preparar a decisão de multiempresa antes de escrever a
+lógica de negócio da Fase 5, evitando reescrever ~20 policies depois
+**Achados da análise:** zero uso de `service_role` no código hoje (nada
+a corrigir); ponto crítico identificado — `is_admin()` atual não
+considera tenant, precisa ser redefinida antes de a multiempresa entrar
+em produção (senão um admin veria dados de todas as empresas)
+**Resultado dos testes:** Não aplicável — nenhum SQL foi executado,
+apenas documentação e proposta. Aguardando aprovação explícita do
+usuário antes de aplicar a migration.

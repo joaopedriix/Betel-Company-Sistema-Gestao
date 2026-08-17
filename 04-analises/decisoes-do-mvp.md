@@ -13,20 +13,21 @@
 | Cliente tem login próprio (não é visualização pública) | 2026-08-17 | idem |
 | Hospedagem: Vercel + Supabase Cloud | 2026-08-17 | idem |
 | Escopo do MVP (17 critérios de aceite) | 2026-08-17 | `01-documentacao/requisitos/mvp.md` |
-| Sistema single-tenant por enquanto | Implícito (pendência aberta) | ver seção abaixo |
+| **Multiempresa/multitenancy DESDE o MVP** — Betel é o primeiro tenant, isolamento por RLS, sem billing/planos/assinatura por enquanto | 2026-08-17 | `04-analises/arquitetura-multitenant.md` (proposta técnica ainda não implementada) |
+| **Cliente pode ter vários eventos** | 2026-08-17 | idem — resolve a pendência antiga |
+| **Cliente pode ter vários contratos** | 2026-08-17 | novo |
+| **Cada contrato pertence a 1 cliente + 1 evento**; no MVP cada evento tem um contrato "principal" | 2026-08-17 | ver `04-analises/arquitetura-multitenant.md` para a nuance entre isso e a constraint atual (sem `UNIQUE`) |
+| Tarefa padrão continua separada da tarefa gerada para o evento | 2026-08-17 | já era assim no schema atual — confirmação, não mudança |
 
-## Provisórias — assumidas no schema, ainda não confirmadas pelo usuário
+## Provisórias — propostas técnicas aguardando aprovação de implementação
 
-Estas decisões foram tomadas pelo caminho mais flexível/seguro para não
-travar a modelagem, mas **precisam de confirmação explícita**:
+Decisões de **produto** já confirmadas acima (não mude de novo); o que
+falta aprovar é a **forma técnica** de implementar, detalhada em
+`04-analises/arquitetura-multitenant.md`, `plano-migration-tenant.md` e
+`testes-isolamento-tenant.md` — nenhuma dessas foi executada ainda
+(schema/policies atuais continuam single-tenant até aprovação explícita).
 
-1. **Cliente pode ter mais de um evento (relação 1:N).** Se o negócio
-   confirmar que é sempre 1:1, é uma mudança pequena (`UNIQUE` em
-   `evento.cliente_id`). Registrado em `00-gestao/pendencias.md`.
-2. **Multiempresa/multitenancy: não implementado.** Nenhuma tabela tem
-   `empresa_id`. Ver análise de impacto completa em
-   `04-analises/auditoria-mvp.md`, seção 7.
-3. **Nome oficial do produto e identidade visual:** ainda pendentes,
+1. **Nome oficial do produto e identidade visual:** ainda pendentes,
    sem impacto técnico até agora.
 
 ## Não decidido / não aplicável ainda
