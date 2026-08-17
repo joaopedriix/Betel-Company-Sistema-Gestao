@@ -1,10 +1,19 @@
-# Plano de migration multitenant (proposto, NÃO executado)
+# Plano de migration multitenant
 
-> Estratégia explicada primeiro, SQL de proposta depois — conforme
-> pedido. O arquivo de migration fica em
-> `03-projeto-betel/database/proposals/0002_multitenant.sql`, **fora**
-> do fluxo de deploy (a pasta `database/` raiz continua sendo a fonte
-> aplicada; `proposals/` é só para revisão).
+> ✅ **EXECUTADA em 2026-08-17**, contra o projeto Supabase real
+> `betel-company`, via `psql` (session pooler, IPv4) rodando dentro de
+> um Codespace dedicado. Transação única, `COMMIT` sem erros. Todas as
+> 10 validações pós-migration passaram (ver
+> `00-gestao/changelog.md`). O arquivo aplicado está em
+> `03-projeto-betel/database/proposals/0002_multitenant.sql` — ainda não
+> promovido para `database/` (fica pendente de decisão do usuário sobre
+> renomear/mover, já que o conteúdo do `proposals/` foi o efetivamente
+> executado, revisão 3, com 3 correções encontradas na revisão final:
+> RLS/grant faltando em `empresa`, insert não idempotente, e troca de
+> `is_admin()` solto por `is_admin_of(empresa_id)` + trigger de
+> imutabilidade).
+>
+> Estratégia original (abaixo) mantida como registro do planejamento.
 
 ---
 
@@ -105,17 +114,25 @@ Todas as 23 recriadas com o filtro de tenant (Parte 5 de
 `arquitetura-multitenant.md`). Nenhuma removida sem substituição, nenhuma
 mantida sem o filtro novo (senão o isolamento fica incompleto).
 
-### Alterações nas funções SQL
+### Alterações nas funções SQL (executado, revisão 3)
 
-`is_admin()` — redefinida (`create or replace`, sem quebrar
-compatibilidade de assinatura) para checar `empresa_id =
-current_empresa_id()` também. `current_empresa_id()` — nova.
-`current_perfil()`, `current_cliente_id()` — sem mudança de assinatura,
-mas revisar se `current_cliente_id()` precisa de filtro de tenant
-também (hoje já é implicitamente isolado porque `cliente.usuario_id` é
-`unique`, mas ao adicionar `empresa_id` em `cliente`, considerar se vale
-adicionar `and empresa_id = current_empresa_id()` na função por defesa
-em profundidade — recomendado, custo baixo).
+- `current_empresa_id()` — nova.
+- `is_admin()` — mantida **sem** escopo de tenant (decisão da revisão
+  final, diferente do plano original acima): reservada para uso
+  genérico futuro, não é mais usada em nenhuma policy de tabela de
+  negócio.
+- `is_admin_of(p_empresa_id uuid)` — nova, substitui o padrão original
+  "`is_admin() and empresa_id = current_empresa_id()`" repetido em cada
+  policy. Faz as duas checagens numa única chamada, reduzindo o risco de
+  uma policy futura esquecer o filtro de tenant.
+- `fn_empresa_id_immutable()` — nova (trigger), bloqueia qualquer
+  `UPDATE` que mude `empresa_id`, em qualquer perfil, defesa em
+  profundidade além do `WITH CHECK` das policies.
+- `current_perfil()`, `current_cliente_id()` — **sem alteração** nesta
+  migration. `current_cliente_id()` ainda não tem filtro de tenant
+  explícito (fica isolado hoje por `cliente.usuario_id` ser `UNIQUE`) —
+  registrado como melhoria de defesa em profundidade para uma próxima
+  revisão, não bloqueante.
 
 ### Possíveis impactos
 
@@ -132,19 +149,63 @@ em profundidade — recomendado, custo baixo).
   ainda. Isso é o melhor momento possível para essa migration (antes de
   existir lógica de negócio para reescrever).
 
-### Plano de rollback
+### Plano de rollback (re-verificado após a execução, 2026-08-17)
 
-Como tudo é aditivo:
-1. `drop policy` das novas versões, `create policy` das antigas
-   (mantidas em `database/policies.sql` no histórico do Git — `git show
-   <commit-antes>:03-projeto-betel/database/policies.sql`).
-2. `alter table <tabela> drop column empresa_id` nas 10 tabelas.
-3. `drop table empresa`.
-4. `drop function current_empresa_id()`, reverter `is_admin()` para a
-   versão anterior (também no histórico do Git).
+O usuário pediu confirmação explícita de 4 pontos antes de considerar o
+rollback seguro — respondidos abaixo, um a um:
 
-Risco do rollback: **baixo** — sem dados de produção reais, sem Server
-Actions dependendo da coluna nova ainda.
+**1. As policies antigas estão preservadas no Git?** Sim. O `policies.sql`
+pré-migration está intacto no commit `5bc20bd` (e em todos os anteriores)
+— `git show 5bc20bd:03-projeto-betel/database/policies.sql` reproduz as
+23 policies originais (sem `empresa_id`) exatamente como estavam antes.
+Este arquivo **não foi sobrescrito** pela migration (que só existe em
+`database/proposals/0002_multitenant.sql`), então não há necessidade de
+"recuperar do histórico" — o texto já está disponível no arquivo atual
+do repositório.
+
+**2. Pode ser revertida sem apagar dados?** Sim, com uma ressalva: como
+a migration foi aditiva (nenhuma coluna/tabela antiga foi removida), um
+rollback via `DROP COLUMN empresa_id` / `DROP TABLE empresa` não apaga
+nenhum dado das 10 tabelas originais — só remove a informação de tenant
+que foi adicionada. A ressalva: se, entre a migration e o rollback,
+qualquer dado de negócio novo for criado (ex.: um cliente cadastrado),
+esse dado é apagado junto se o rollback incluir `DROP COLUMN empresa_id`
+sem antes migrar esses dados para fora — não é o caso agora (login
+validado logo após a migration, nenhum dado novo criado no meio).
+
+**3. O rollback não deixa RLS desativado?** Correto, e é importante
+frisar a ordem certa: um rollback **parcial** (só `DROP POLICY` das
+novas, sem `CREATE POLICY` das antigas) deixaria as tabelas com RLS
+**habilitado mas sem policy nenhuma** — que é *mais* restritivo (nega
+tudo), nunca "desativado" (RLS continua `ENABLE`/`FORCE`, não é tocado
+pelo rollback de policies). Ainda assim, isso quebraria o sistema
+inteiro (ninguém acessaria nada). Por isso o rollback **correto e
+completo** é: recriar as policies antigas **antes ou na mesma transação**
+de remover as novas, nunca deixar uma janela sem nenhuma policy.
+
+**4. A restauração pode ser feita em ordem segura?** Sim — dentro de uma
+única transação (`BEGIN`...`COMMIT`), a ordem entre passos não importa
+para quem está fora da transação (ninguém vê estado intermediário,
+mesmo raciocínio da Parte 6 desta migration). Ordem recomendada, por
+clareza:
+1. `DROP POLICY` das 23 policies atuais (com `is_admin_of`) + a nova
+   `empresa_self_select`.
+2. `CREATE POLICY` das 23 originais (texto exato em
+   `03-projeto-betel/database/policies.sql`, já no repositório).
+3. `DROP TRIGGER` dos 10 triggers de imutabilidade +
+   `DROP FUNCTION fn_empresa_id_immutable()`.
+4. `ALTER TABLE ... DROP COLUMN empresa_id` nas 10 tabelas (o `DROP
+   COLUMN` já remove a FK e o índice associados automaticamente).
+5. `DROP FUNCTION current_empresa_id()`, `DROP FUNCTION is_admin_of(uuid)`.
+   `is_admin()` não precisa reverter — foi re-declarada com
+   `CREATE OR REPLACE` mas o corpo é **idêntico** ao original (nenhuma
+   mudança funcional, confirmado comparando com `policies.sql`).
+6. `DROP TABLE empresa` (arrasta a policy `empresa_self_select` e o
+   trigger `trg_empresa_updated` junto, se ainda não removidos).
+
+Risco do rollback: **baixo** — sem dados de negócio reais criados desde
+a migration (confirmado pela contagem de linhas ainda ser a mesma:
+1 usuário, 0 nas demais 9 tabelas + a nova `empresa` com 1 linha).
 
 ---
 

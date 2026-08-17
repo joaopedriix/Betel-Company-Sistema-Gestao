@@ -19,13 +19,16 @@
 | **Cada contrato pertence a 1 cliente + 1 evento**; no MVP cada evento tem um contrato "principal" | 2026-08-17 | ver `04-analises/arquitetura-multitenant.md` para a nuance entre isso e a constraint atual (sem `UNIQUE`) |
 | Tarefa padrão continua separada da tarefa gerada para o evento | 2026-08-17 | já era assim no schema atual — confirmação, não mudança |
 
-## Provisórias — propostas técnicas aguardando aprovação de implementação
+## Multitenant — de proposta a implementado (2026-08-17)
 
-Decisões de **produto** já confirmadas acima (não mude de novo); o que
-falta aprovar é a **forma técnica** de implementar, detalhada em
-`04-analises/arquitetura-multitenant.md`, `plano-migration-tenant.md` e
-`testes-isolamento-tenant.md` — nenhuma dessas foi executada ainda
-(schema/policies atuais continuam single-tenant até aprovação explícita).
+A forma técnica (detalhada em `04-analises/arquitetura-multitenant.md`,
+`plano-migration-tenant.md`) foi revisada, corrigida (3 problemas
+achados na revisão final) e **aplicada** contra o Supabase real da
+Betel — schema/policies **não são mais single-tenant**. Ver
+`00-gestao/changelog.md` para o resultado da execução e validações.
+Pendente: testes de isolamento com um 2º tenant (`04-analises/testes-isolamento-tenant.md`)
+ainda não criado — aguardando decisão do usuário para criar dados
+fictícios de teste.
 
 1. **Nome oficial do produto e identidade visual:** ainda pendentes,
    sem impacto técnico até agora.

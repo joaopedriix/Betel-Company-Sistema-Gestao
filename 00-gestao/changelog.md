@@ -134,3 +134,40 @@ em produção (senão um admin veria dados de todas as empresas)
 **Resultado dos testes:** Não aplicável — nenhum SQL foi executado,
 apenas documentação e proposta. Aguardando aprovação explícita do
 usuário antes de aplicar a migration.
+
+**Alteração:** Revisão final da proposta multitenant (3 correções
+achadas) e **execução da migration `0002_multitenant.sql`** contra o
+Supabase real da Betel, aprovada explicitamente pelo usuário
+**Correções feitas na revisão, antes de rodar:**
+1. Tabela `empresa` não tinha RLS/policy/grant — corrigido (mesmo tipo
+   de bug do GRANT ausente já visto antes nas outras 10 tabelas).
+2. Criação da empresa Betel não era idempotente — corrigido (`select`
+   antes de `insert`).
+3. Padrão `is_admin() and empresa_id = current_empresa_id()` repetido
+   em cada policy trocado por uma função única `is_admin_of(empresa_id)`
+   — reduz risco de uma policy futura esquecer o filtro de tenant.
+   Adicionado também um trigger `fn_empresa_id_immutable` em todas as 10
+   tabelas: `empresa_id` nunca pode mudar após a criação da linha, nem
+   por admin (defesa em profundidade, não depende só do `WITH CHECK`).
+**Ambiente de execução:** Codespace dedicado (`expert-goggles-4qqjvj57wv5g24ww`,
+Node 22), via `psql` conectado pelo *session pooler* do Supabase (IPv4 —
+a conexão direta é IPv6-only e o Codespace não tinha rota IPv6).
+**Arquivos:** `03-projeto-betel/database/proposals/0002_multitenant.sql`
+(script executado), `04-analises/arquitetura-multitenant.md`,
+`04-analises/plano-migration-tenant.md`,
+`04-analises/testes-isolamento-tenant.md`,
+`04-analises/decisoes-do-mvp.md` (status atualizado para "aplicado")
+**Resultado da execução:** `BEGIN` → todos os passos → `COMMIT`, **sem
+erros**. 10 validações pós-migration, todas conferidas: tabela `empresa`
+criada com a Betel; usuário admin vinculado; `empresa_id NOT NULL` sem
+nenhuma linha nula nas 10 tabelas; 10 FKs; 10 índices; 4 funções
+(`current_empresa_id`, `is_admin`, `is_admin_of`,
+`fn_empresa_id_immutable`); 24 policies (23 recriadas + `empresa_self_select`);
+RLS `ENABLE`+`FORCE` nas 11 tabelas; 10 triggers de imutabilidade; GRANT
+SELECT em `empresa` para `authenticated`. Login/autenticação
+revalidados via API REST após a migration — funcionando, agora com
+`empresa_id` preenchido na resposta.
+**Não executado:** criação de um segundo tenant de teste para os 21
+testes de isolamento (`04-analises/testes-isolamento-tenant.md`) —
+requer criar dados fictícios novos, deixado para decisão explícita do
+usuário.

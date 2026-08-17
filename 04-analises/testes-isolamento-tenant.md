@@ -1,11 +1,15 @@
-# Plano de testes de isolamento entre tenants (proposto, não executado)
+# Plano de testes de isolamento entre tenants
 
-> Só é executável **depois** que a migration de `04-analises/plano-migration-tenant.md`
-> for aprovada e aplicada. Requer criar um segundo tenant de teste
-> ("Empresa B") e usuários adicionais — nenhum existe hoje (só a Betel +
-> 1 admin). Formato igual ao já usado em
-> `06-testes-evidencias/testes-manuais/`: Cenário / Pré-condições /
-> Passos / Resultado esperado / Resultado obtido / Status.
+> Migration **já aplicada** (2026-08-17, ver `00-gestao/changelog.md`).
+> Os 21 casos abaixo continuam **não executados** — dependem de um
+> segundo tenant de teste ("Empresa B") e usuários adicionais, que ainda
+> não foram criados (só existe a Betel + 1 admin). Não criei esse
+> tenant/usuários nesta rodada porque envolve criar dados novos (mesmo
+> fictícios) num projeto real, o que pedi para confirmar antes — ver
+> proposta na seção "Setup necessário" e o relatório final. Formato
+> igual ao já usado em `06-testes-evidencias/testes-manuais/`: Cenário /
+> Pré-condições / Passos / Resultado esperado / Resultado obtido /
+> Status.
 
 ## Setup necessário antes de rodar
 

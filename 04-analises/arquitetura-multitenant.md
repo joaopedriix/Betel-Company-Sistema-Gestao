@@ -1,10 +1,15 @@
-# Arquitetura multitenant — proposta técnica (não implementada)
+# Arquitetura multitenant
 
-> Análise + proposta pedida em 2026-08-17. **Nada aqui foi executado.**
-> Schema, policies e código atuais continuam single-tenant até aprovação
-> explícita e implementação em etapa separada. Decisão de produto (fazer
-> multiempresa desde o MVP) já está confirmada — ver
-> `04-analises/decisoes-do-mvp.md`; este documento é sobre o *como*.
+> ✅ **APLICADA em 2026-08-17** — schema e banco reais já são
+> multitenant (tabela `empresa`, `empresa_id` nas 10 tabelas, RLS
+> atualizado). Ver `00-gestao/changelog.md` para o resultado da
+> execução e `04-analises/plano-migration-tenant.md` para o passo a
+> passo real. Este documento descreve o modelo tal como implementado,
+> com 3 correções feitas na revisão final antes de rodar (RLS/grant que
+> faltava em `empresa`, insert não idempotente, e `is_admin_of()` no
+> lugar do padrão antigo) — ver o cabeçalho de
+> `03-projeto-betel/database/proposals/0002_multitenant.sql` para o
+> detalhe de cada correção.
 
 ---
 
