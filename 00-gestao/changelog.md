@@ -90,3 +90,27 @@ só com SELECT).
 **Resultado dos testes:** Login testado de ponta a ponta no navegador
 (`npm run dev` + Supabase real): autenticação, leitura do perfil via RLS,
 e redirecionamento para `/dashboard` como admin — sucesso.
+
+**Alteração:** Auditoria técnica e funcional completa do MVP (a pedido do
+usuário, sem implementar módulos novos). Checkpoint Git commitado e
+enviado (push autorizado explicitamente). Criado Codespace dedicado ao
+projeto Betel para rodar os testes técnicos, corrigindo 2 problemas de
+`.devcontainer/devcontainer.json` (feature `docker-in-docker`
+incompatível; faltava `sshd`) e 2 problemas reais de infraestrutura de
+código: `next lint` removido no Next.js 16 (script de lint nunca
+funcionaria) e Node 20 incompatível com `@supabase/*` (exige `>=22`)
+**Arquivos:** `04-analises/auditoria-mvp.md` (novo, relatório completo),
+`04-analises/decisoes-do-mvp.md` (novo),
+`06-testes-evidencias/testes-manuais/roteiro-auditoria-completo.md` (novo),
+`.devcontainer/devcontainer.json`, `03-projeto-betel/package.json`,
+`03-projeto-betel/eslint.config.mjs` (novo)
+**Motivo:** Confirmar o estado real do projeto antes de continuar a Fase
+5, e validar `lint`/`build` no Codespace conforme solicitado
+**Resultado dos testes:** No Codespace (Node 22): `npm install` limpo (0
+vulnerabilidades, sem EBADENGINE), `npm run lint` sem erros/warnings,
+`npm run build` OK (13 rotas, TypeScript OK). Codespace pausado ao final.
+**Achado principal:** apenas autenticação está implementada; todo o
+restante do MVP funcional (cadastros, contratos, checklist automático,
+progresso, dashboard) ainda não existe — telas são stubs. Nenhum dado
+fictício encontrado; tudo que existe é real e testado, o que falta está
+claramente marcado como ausente.

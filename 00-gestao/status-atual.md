@@ -2,12 +2,14 @@
 
 ## Fase atual
 
-Fase 5 — Implementação incremental (1ª funcionalidade concluída e testada:
-autenticação)
+Fase 6 — Auditoria/revisão intermediária (a pedido do usuário, entre a
+1ª e a 2ª funcionalidade da Fase 5). Nenhum módulo novo sendo
+implementado enquanto a auditoria não for aprovada.
 
 ## Status
 
-Em andamento
+Bloqueado (aguardando aprovação do relatório de auditoria em
+`04-analises/auditoria-mvp.md` antes de retomar a Fase 5)
 
 ## Concluído
 
