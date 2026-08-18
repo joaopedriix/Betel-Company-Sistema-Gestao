@@ -198,3 +198,34 @@ bloqueados corretamente no backend.
 **Pendência:** dados fictícios de teste (tenant "Empresa B — Teste" + 5
 usuários + registros) permanecem no banco — decidir se mantêm como
 fixture ou são limpos antes de demonstração real.
+
+**Alteração:** Limpeza controlada de todos os dados fictícios de teste
+(Empresa B inteira + registros ficticios dentro da Betel), e criação de
+um fixture reproduzível separado, isolado dos seeds reais
+**Arquivos:** `03-projeto-betel/database/fixtures/seed-tenant-isolation.sql`
+(novo), `03-projeto-betel/database/fixtures/cleanup-tenant-isolation.sql`
+(novo), `03-projeto-betel/database/fixtures/tenant-isolation-test.md`
+(novo — passo a passo de reprodução)
+**Motivo:** Usuário optou por remover TODOS os dados fictícios (inclusive
+os 2 usuários + 1 registro por tabela que ficaram dentro da própria
+Betel, além da Empresa B inteira), para deixar o banco limpo antes da
+Fase 5 — decisão explícita, ampliando o pedido original (só Empresa B)
+**Procedimento:** localizado por nome do tenant (nunca DELETE sem
+filtro), com assert de segurança contra atingir o ID da Betel; ordem
+respeitando FKs (`historico_tarefa` primeiro, `empresa` por último); 5
+contas removidas do Supabase Auth via Admin API depois da limpeza do
+schema `public`
+**Resultado da validação pós-limpeza:** Empresa B não existe mais (0);
+Betel intacta (1 empresa, 1 usuário — só o admin real); todas as 9
+tabelas de negócio da Betel voltaram a 0 linhas; 6 funções presentes; 24
+policies presentes; RLS `ENABLE`+`FORCE` nas 11 tabelas; login do admin
+Betel revalidado via API REST, funcionando
+**Reprodutibilidade da migration:** não testada em banco efêmero real
+(Docker indisponível no Codespace, não criado outro projeto Supabase só
+para isso) — feita análise estática da ordem de dependências em vez
+disso. Achado: o bug de recursão de RLS (evento↔tarefa_evento) está
+latente também no `policies.sql` original (pré-multitenant), só
+corrigido dentro de `0002_multitenant.sql`
+**Resultado dos testes:** lint 0 erros, build OK (TypeScript sem erros),
+sem testes automatizados ainda (não implementados), sem migrations
+pendentes inesperadas, sem arquivos sensíveis não rastreados.

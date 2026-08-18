@@ -30,6 +30,11 @@ Em andamento
   as 10 tabelas, RLS reescrito com `is_admin_of()` + trigger de
   imutabilidade, Betel como primeiro tenant. Migration executada e
   validada em 2026-08-17 — ver `00-gestao/changelog.md`
+- Fase 6 — **27/27 testes de isolamento passaram** (2 bugs reais
+  pré-existentes da Fase 4 achados e corrigidos: `fn_log_tarefa_evento`
+  sem `empresa_id`, recursão de RLS evento↔tarefa_evento); dados
+  fictícios de teste limpos depois; fixture reproduzível criado em
+  `03-projeto-betel/database/fixtures/`
 
 ## Em andamento
 
@@ -47,23 +52,27 @@ Em andamento
 ## Pendências
 
 - Ver `00-gestao/pendencias.md`
-- Decidir: manter os dados fictícios de teste (tenant "Empresa B —
-  Teste" + 5 usuários) como fixture permanente, ou limpar antes de
-  qualquer demonstração real
 - Promover `03-projeto-betel/database/proposals/0002_multitenant.sql`
   para `database/` (hoje o schema real já reflete a migration, incluindo
   os 2 hotfixes; o arquivo formal ainda está na pasta de proposta)
+- Nenhuma migration não testada do zero em ambiente efêmero (só análise
+  estática) — sem risco real hoje (já validada contra o banco real), mas
+  registrar para quando houver ambiente de CI/staging
 
 ## Riscos
 
 - Ver `00-gestao/riscos.md` e `04-analises/auditoria-mvp.md` seção 16
+- O bug de recursão de RLS (evento↔tarefa_evento) está latente também no
+  `policies.sql` original (pré-multitenant) — só corrigido dentro de
+  `0002_multitenant.sql`. Sem impacto hoje (a migration já foi aplicada),
+  mas relevante se `policies.sql` for reaplicado isoladamente no futuro
 
 ## Decisões aguardando aprovação
 
 - Se o portal do cliente com login entra nesta primeira versão do MVP ou
   fica só como "visualização pública sem login"
-- Criar (ou não) o segundo tenant fictício para validar isolamento antes
-  de seguir para cadastros
+- Push dos commits locais (`5bc20bd`, `2411dc1`, `6a4927a` + o desta
+  limpeza) para o GitHub
 
 ## Última atualização
 
