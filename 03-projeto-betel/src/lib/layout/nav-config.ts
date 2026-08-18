@@ -9,7 +9,6 @@ export type NavEntry =
 export const NAV_BY_PERFIL: Record<Perfil, NavEntry[]> = {
   admin: [
     { type: "link", label: "Dashboard", href: "/dashboard" },
-    { type: "link", label: "Agenda", href: "/agenda" },
     {
       type: "group",
       label: "Cadastros",
@@ -17,7 +16,6 @@ export const NAV_BY_PERFIL: Record<Perfil, NavEntry[]> = {
         { label: "Clientes", href: "/clientes" },
         { label: "Sócios/Usuários", href: "/usuarios" },
         { label: "Serviços", href: "/servicos" },
-        { label: "Checklists", href: "/checklists" },
       ],
     },
     {
@@ -26,6 +24,16 @@ export const NAV_BY_PERFIL: Record<Perfil, NavEntry[]> = {
       items: [
         { label: "Eventos", href: "/eventos" },
         { label: "Contratos", href: "/contratos" },
+      ],
+    },
+    // Agrupados por serem um conjunto: evento aparece na agenda, o
+    // fechamento do contrato gera o checklist como tarefas do evento.
+    {
+      type: "group",
+      label: "Acompanhamento",
+      items: [
+        { label: "Agenda", href: "/agenda" },
+        { label: "Checklists", href: "/checklists" },
         { label: "Tarefas", href: "/tarefas" },
       ],
     },
