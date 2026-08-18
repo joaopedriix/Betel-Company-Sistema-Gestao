@@ -191,6 +191,13 @@ transições permitidas por perfil (sócio: pendente↔em_andamento→concluída
 reabertura concluída→pendente só se perfil=admin). O mesmo trigger alimenta o
 `historico_tarefa` (R3).
 
+**Status pós-implementação (verificado em 2026-08-18 diretamente no banco):**
+R5 e R6 já estão mitigados na prática pelo trigger `fn_tarefa_evento_guard`
+(`trg_tarefa_evento_guard`, existe e ativo hoje), que bloqueia sócio de
+alterar campos sensíveis e de reabrir tarefa concluída — confirmado
+experimentalmente no gate final do MVP ("sócio bloqueado de reabrir tarefa
+concluída"). Este documento não tinha sido atualizado para refletir isso.
+
 ## R7 — Resquício de acesso `anon` da fase "visualização pública" — MÉDIO
 
 **Cenário concreto:** a decisão anterior era portal do cliente **público sem
@@ -201,6 +208,16 @@ todos os eventos.
 
 **Correção exigida:** nenhuma policy para o role `anon` em tabela de negócio.
 Todo acesso do cliente passa por `authenticated` + escopo do próprio cliente.
+
+**Status pós-implementação (verificado em 2026-08-18 diretamente no banco):**
+confirmado real, mas na forma de GRANT, não de policy: `anon` tem
+`TRUNCATE`/`TRIGGER`/`REFERENCES` residual em todas as 11 tabelas de
+negócio (nunca `SELECT`/`INSERT`/`UPDATE`/`DELETE` — nenhuma policy
+libera `anon`, e o PostgREST não expõe `TRUNCATE` via REST, então o
+risco prático hoje é baixo). Ainda assim viola least-privilege e deveria
+ser revogado. **Correção proposta, aguardando autorização para aplicar
+em produção:** `REVOKE TRUNCATE, TRIGGER, REFERENCES ON ALL TABLES IN
+SCHEMA public FROM anon;`.
 
 ## R8 — `onDelete: Cascade` apagando `historico_tarefa` viola "nunca excluir" — MÉDIO
 
@@ -219,6 +236,13 @@ histórico, nunca excluir após concluída") desaparece. E DELETE precisa ser
   `RESTRICT`/arquivamento (soft delete) a cascade, ou aceitar formalmente que
   excluir um evento apaga o histórico — decisão do produto, mas hoje **conflita**
   com a regra "nunca excluir". Sinalizar ao dono do produto.
+
+**Status pós-implementação (verificado em 2026-08-18 diretamente no banco):**
+**não é um problema no schema real** — a FK `historico_tarefa_tarefa_evento_id_fkey`
+usa `ON DELETE RESTRICT`, não `CASCADE` (impede excluir uma `tarefa_evento`
+enquanto houver histórico vinculado). O parecer original (Fase 4, anterior
+à implementação) alertava sobre um risco de design que a implementação
+final já evitou. Sem ação necessária.
 
 ## R9 — Vínculo `cliente ↔ usuario` frouxo fura o isolamento entre clientes — MÉDIO
 
@@ -240,6 +264,16 @@ mostra tarefa interna.
   `historico_tarefa` (contém trocas de responsável/observações internas); se
   for exibir algo, filtrar só eventos do tipo público e tarefas visíveis.
 
+**Status pós-implementação (verificado em 2026-08-18 diretamente no banco):**
+confirmado ainda existente — `cliente.usuario_id` não tem nenhuma
+CHECK constraint ou trigger garantindo que aponte para um usuário da
+mesma empresa (só FK simples `ON DELETE SET NULL`). **Impacto prático
+hoje é zero**: nenhuma tela usa esse campo ainda (`portal-cliente` é um
+stub "Em Construção", ver `src/app/portal-cliente/page.tsx`). Correção
+adiada intencionalmente para quando o portal do cliente for
+implementado — corrigir agora seria trabalho especulativo numa feature
+que ainda não existe.
+
 ## R10 — Contrato fechado é editável via API direta (bypass da aplicação)
 
 **Confirmado experimentalmente em 2026-08-18** (gate final do MVP), não
@@ -258,10 +292,17 @@ só checa `is_admin_of(empresa_id)` — não checa `status`.
   isso já é admin com acesso total ao sistema — não é uma escalação de
   privilégio para um perfil menos privilegiado, mas quebra a garantia de
   integridade "contrato fechado é imutável".
-- **Mitigação recomendada (não aplicada nesta fase):** trigger de banco
-  análogo a `fn_empresa_id_immutable`, bloqueando `UPDATE`/`DELETE` em
-  `contrato`/`contrato_servico` quando `status = 'fechado'` (exceto o
-  próprio `fechar_contrato()`, que só faz UPDATE de rascunho→fechado).
+- **CORRIGIDO em 2026-08-18** — migration `0005_contrato_fechado_immutable.sql`
+  aplicada contra o Supabase real: dois triggers de guarda
+  (`fn_contrato_fechado_immutable` em `contrato`, `fn_contrato_servico_fechado_immutable`
+  em `contrato_servico`) bloqueiam UPDATE/DELETE quando o contrato já
+  está `fechado`, mesmo padrão de `fn_empresa_id_immutable`. Testado com
+  fixture transacional (criada e revertida via `ROLLBACK`, nenhum dado
+  fictício persistido): rascunho continua editável; fechamento inicial
+  (via `fechar_contrato()`) continua funcionando; reabertura, DELETE do
+  contrato, DELETE e UPDATE de `contrato_servico` em contrato fechado —
+  todos bloqueados com erro controlado. Teste de fumaça na aplicação
+  (`/contratos`) sem regressão.
 
 ---
 
@@ -273,12 +314,12 @@ só checa `is_admin_of(empresa_id)` — não checa `status`.
 | R2 | `service_role` em server action burla RLS | Crítico | Sim |
 | R3 | Escrita de `historico_tarefa` pelo usuário | Alto | Sim |
 | R4 | RLS não habilitado / sem default-deny em alguma tabela | Alto | Sim |
-| R5 | Sócio altera `visivel_ao_cliente`/`responsavel_id` da própria linha | Alto | Não* |
-| R6 | Reabertura/transição de status só-admin exige trigger | Médio/Alto | Não* |
-| R7 | Resquício de policy `anon` da visualização pública | Médio | Não |
-| R8 | Cascade delete apaga audit trail / DELETE não-admin | Médio | Não |
-| R9 | Vínculo `cliente↔usuario` frouxo e `AND visivel_ao_cliente` | Médio | Não |
-| R10 | Contrato fechado editável via API direta (só bloqueado na aplicação) | Médio | Não |
+| R5 | Sócio altera `visivel_ao_cliente`/`responsavel_id` da própria linha | Alto | **Mitigado** (`fn_tarefa_evento_guard`, confirmado 2026-08-18) |
+| R6 | Reabertura/transição de status só-admin exige trigger | Médio/Alto | **Mitigado** (`fn_tarefa_evento_guard`, confirmado 2026-08-18) |
+| R7 | Resquício de GRANT `anon` (TRUNCATE/TRIGGER/REFERENCES) | Médio | Confirmado, correção pronta, aguardando autorização |
+| R8 | Cascade delete apaga audit trail / DELETE não-admin | Médio | **Não é problema real** — schema usa `ON DELETE RESTRICT` |
+| R9 | Vínculo `cliente↔usuario` frouxo | Médio | Confirmado, impacto zero hoje (feature não usada), adiado |
+| R10 | Contrato fechado editável via API direta | Médio | **CORRIGIDO 2026-08-18** (`0005_contrato_fechado_immutable.sql`) |
 
 \* Não bloqueia iniciar, mas **é obrigatório** antes de expor o sistema a
 usuários reais — R5/R6 são as escaladas de coluna e de máquina de estados.

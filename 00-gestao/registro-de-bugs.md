@@ -58,3 +58,36 @@ suspeitado foi **confirmado experimentalmente** (deixa de ser hipótese):
 - **Concorrência real** de `fechar_contrato()` (2 chamadas HTTP paralelas
   no mesmo contrato) testada de verdade: ambas retornaram sucesso, sem
   erro e sem duplicar tarefa.
+
+## Correção de segurança pós-gate (2026-08-18)
+
+Auditoria de segurança pedida pelo usuário antes de preparar o MVP para
+uso real. Cruzou o parecer de segurança original (`00-gestao/riscos.md`,
+Fase 4, anterior à implementação) com o estado real do banco (triggers,
+grants, foreign keys) — não confiou cegamente no documento antigo.
+
+- **R10 corrigido:** migration `0005_contrato_fechado_immutable.sql`
+  aplicada contra o Supabase real (autorização explícita do usuário via
+  pergunta direta antes de tocar produção). Dois triggers de guarda
+  (`fn_contrato_fechado_immutable`, `fn_contrato_servico_fechado_immutable`)
+  bloqueiam UPDATE/DELETE em contrato/contrato_servico quando o contrato
+  já está fechado. Testado com fixture 100% transacional — cria dados
+  fictícios, roda 6 cenários (rascunho editável, fechamento permitido,
+  reabertura bloqueada, delete de contrato bloqueado, delete/update de
+  contrato_servico bloqueados), `ROLLBACK` no final. Confirmado
+  diretamente no banco que zero dados de teste ficaram (`0/0/0/0`).
+  Teste de fumaça em `/contratos` sem regressão.
+- **R5/R6 descobertos já mitigados:** o trigger `fn_tarefa_evento_guard`
+  já existia e cobre exatamente os dois riscos (sócio alterar campos
+  sensíveis, reabrir tarefa concluída) — o documento de riscos nunca
+  tinha sido atualizado para refletir isso.
+- **R8 descoberto como não sendo mais um problema:** a FK real usa
+  `ON DELETE RESTRICT` em `historico_tarefa`, não `CASCADE` como o
+  parecer original temia.
+- **R7 confirmado, correção pronta mas não aplicada:** `anon` tem GRANT
+  residual de `TRUNCATE`/`TRIGGER`/`REFERENCES` (nunca `SELECT`/`INSERT`/
+  `UPDATE`/`DELETE`) em todas as 11 tabelas de negócio. Aguardando
+  autorização explícita do usuário antes de aplicar o `REVOKE`.
+- **R9 confirmado, correção adiada:** `cliente.usuario_id` sem
+  constraint cross-tenant, mas o campo não é usado por nenhuma tela
+  ainda (`portal-cliente` é stub). Corrigir agora seria especulativo.
