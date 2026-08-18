@@ -26,12 +26,45 @@ Testado via clique real no DOM (não só leitura de código):
 - [x] "Refazer dicas" reabre o tour mesmo já estando concluído
 - [x] "Pular" fecha o tour corretamente
 
-**Não testado nesta sessão** (sem uma segunda conta de teste
-disponível, e por regra não posso digitar senha de terceiros): tour do
-perfil sócio (existe em `ONBOARDING_STEPS_POR_PERFIL.socio`, mesmo
-código do provider — risco residual baixo, mas não é evidência real).
-Também não testado: mobile real (viewport emulado, não dispositivo
-físico), leitor de tela, zoom 200%.
+## Onboarding (perfil sócio) — validado em sessão separada
+
+Conta fictícia criada pela própria tela "Novo usuário" do admin
+(`socio.teste.onboarding.fixture@example.com`, domínio `example.com`,
+sem dado real) — bônus: valida essa funcionalidade real de cadastro
+também. Login feito pelo usuário em janela anônima (a automação não
+digita senha de ninguém, nem de contas de teste próprias — só o usuário
+fez esse passo específico), com a porta do Codespace temporariamente
+tornada pública (`gh codespace ports visibility 3000:public`) só para
+contornar o gate de autenticação do túnel, revertida para `private`
+logo depois.
+
+- [x] Tour abre sozinho no primeiro acesso — "Passo 1 de 5"
+- [x] "Avançar" percorre os passos do perfil sócio (minhas tarefas,
+      detalhes da tarefa, conclusão, navegação)
+- [x] Menu mostra só "Minhas tarefas" — nenhum item administrativo
+      (confirma `NAV_BY_PERFIL.socio` em `lib/layout/nav-config.ts`,
+      comportamento intencional, não bug)
+
+**Limpeza:** conta de Auth apagada via `service_role`
+(`auth.admin.deleteUser`); a linha em `public.usuario` foi removida
+**automaticamente por `ON DELETE CASCADE`** — confirmado depois pela
+lista `/usuarios`, que voltou a mostrar só o admin real. Nenhum dado
+fictício restante.
+
+**Achado de segurança (não é um risco, é uma verificação positiva):**
+tentar `SELECT`/`DELETE`/`UPDATE` em `public.usuario` com a
+`service_role` retornou `permission denied for table usuario` (erro de
+GRANT do Postgres, não de RLS) — `service_role` não tem **nenhum**
+privilégio nessa tabela. Na prática isso reforça a regra R2
+(`00-gestao/riscos.md`): mesmo que alguém erroneamente tentasse usar
+`service_role` para ler/gravar `usuario`, o banco recusaria antes mesmo
+da RLS entrar em jogo. Vale confirmar se isso é deliberado (grants.sql)
+ou um acaso de como os GRANTs foram escritos — registrar em
+`00-gestao/riscos.md` como observação, não como pendência bloqueante.
+
+**Não testado nesta sessão:** mobile real (viewport emulado, não
+dispositivo físico), leitor de tela, zoom 200%, perfil cliente (portal
+do cliente é stub, sem onboarding ainda).
 
 ### Observação de ferramenta (não é bug da aplicação)
 

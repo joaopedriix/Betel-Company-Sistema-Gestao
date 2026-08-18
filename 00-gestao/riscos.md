@@ -309,6 +309,21 @@ só checa `is_admin_of(empresa_id)` — não checa `status`.
 
 ---
 
+## Observação — `service_role` sem GRANT em `usuario` (verificado 2026-08-18)
+
+Não é um risco (é o comportamento desejado por R2), mas vale registrar:
+testado na prática que `service_role` não tem nenhum privilégio
+(`SELECT`/`UPDATE`/`DELETE`) em `public.usuario` — Postgres recusa com
+`permission denied for table usuario`, um erro de GRANT, anterior a
+qualquer avaliação de RLS. Ou seja, mesmo um bug de código que
+acidentalmente usasse `service_role` (`src/lib/supabase/admin.ts`) para
+ler/gravar `usuario` seria bloqueado pelo próprio banco. Não confirmado
+se isso foi deliberado em `grants.sql` ou um efeito colateral de como os
+GRANTs foram escritos — não é bloqueante, só uma camada de defesa a mais
+que vale entender/documentar quando alguém revisar `grants.sql` de
+novo. Ver evidência em
+`06-testes-evidencias/testes-manuais/onboarding-navegacao.md`.
+
 ## Resumo de severidade
 
 | # | Risco | Severidade | Bloqueia? |
