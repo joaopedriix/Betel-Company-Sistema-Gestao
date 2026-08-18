@@ -46,7 +46,7 @@ refletem exposição ao conceito nesta sessão, não domínio comprovado)*
 | Banco de dados relacional | 1 |
 | SQL | 1 |
 | Autenticação | 1 |
-| Autorização | 1 |
+| Autorização | 2 |
 
 ## Arquitetura
 
@@ -63,13 +63,14 @@ refletem exposição ao conceito nesta sessão, não domínio comprovado)*
 ## Projeto Betel
 
 ### Módulo atual
-Autenticação (login/logout, proteção de rota por perfil) — implementado
-e testado de ponta a ponta em 2026-08-17 contra o Supabase real.
+Menu de navegação lateral (sidebar) — implementado, testado e commitado
+localmente em 2026-08-18. MVP funcional completo (cadastros, contratos,
+eventos, checklist automático, tarefas, dashboard, navegação).
 
 ### Próximos módulos
-Cadastros base (clientes, usuários/sócios, serviços) → contratos →
-geração automática de checklist → "Minhas tarefas" → conclusão de
-tarefa/checklist automático → dashboard do gestor.
+Onboarding guiado de primeiro acesso (migration `0004_onboarding.sql`
+pronta, aguardando aprovação explícita antes de aplicar) ou portal do
+cliente — a definir.
 
 ## Decisões técnicas aprendidas
 *(a preencher conforme o usuário explicar de volta — ver
@@ -85,9 +86,14 @@ Ver `docs/learning/MISTAKES.md`.
   buscar os dados do usuário? (o bug do GRANT — ver `MISTAKES.md`)
 
 ## Última sessão
-2026-08-17 — criação do sistema de ensino (`CLAUDE.md` + `LEARNING.md` +
-`docs/learning/`), no mesmo dia em que autenticação foi implementada e
-testada. Nenhuma pergunta de verificação respondida ainda.
+2026-08-18 — menu de navegação lateral implementado e commitado
+localmente. Primeira pergunta de verificação respondida corretamente:
+o usuário identificou, sem ajuda, que a proteção contra acesso direto
+por URL é o middleware no servidor (`ADMIN_ROUTES`), não o sidebar —
+distinguiu corretamente "o que mostra" de "o que autoriza". Autorização
+promovida de nível 1 para nível 2 na tabela de Fundamentos.
 
 ## Próximo conceito recomendado
-RLS vs. GRANT (o bug real de hoje) — ver `docs/learning/LESSONS.md`.
+Onboarding guiado — quando aprovado, é uma boa oportunidade para
+reforçar "estado por usuário vs. estado por sessão" (por que preferimos
+guardar `onboarding_concluido` no banco em vez de `localStorage`).
