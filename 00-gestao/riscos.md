@@ -309,20 +309,40 @@ só checa `is_admin_of(empresa_id)` — não checa `status`.
 
 ---
 
-## Observação — `service_role` sem GRANT em `usuario` (verificado 2026-08-18)
+## Observação — `service_role` sem GRANT em NENHUMA tabela de negócio (verificado 2026-08-18)
 
-Não é um risco (é o comportamento desejado por R2), mas vale registrar:
-testado na prática que `service_role` não tem nenhum privilégio
-(`SELECT`/`UPDATE`/`DELETE`) em `public.usuario` — Postgres recusa com
-`permission denied for table usuario`, um erro de GRANT, anterior a
-qualquer avaliação de RLS. Ou seja, mesmo um bug de código que
-acidentalmente usasse `service_role` (`src/lib/supabase/admin.ts`) para
-ler/gravar `usuario` seria bloqueado pelo próprio banco. Não confirmado
-se isso foi deliberado em `grants.sql` ou um efeito colateral de como os
-GRANTs foram escritos — não é bloqueante, só uma camada de defesa a mais
-que vale entender/documentar quando alguém revisar `grants.sql` de
-novo. Ver evidência em
-`06-testes-evidencias/testes-manuais/onboarding-navegacao.md`.
+Ampliando o achado inicial (que citava só `usuario`): testei via REST
+direto (`GET .../rest/v1/<tabela>?select=*&limit=1` com a
+`service_role` key) as 11 tabelas de negócio —
+`usuario, empresa, cliente, evento, contrato, contrato_servico,
+tarefa_evento, servico, checklist_modelo, tarefa_padrao,
+historico_tarefa` — e **todas** retornam `403`, código Postgres
+`42501` ("permission denied for table X"), com a dica padrão `GRANT
+... TO service_role`. Ou seja: `service_role` não tem **nenhum**
+privilégio PostgREST (`SELECT`/`INSERT`/`UPDATE`/`DELETE`) em nenhuma
+tabela do schema `public`.
+
+Não é um risco — é o comportamento desejado por R2, e mais forte do que
+o previsto: mesmo um bug de código que acidentalmente usasse
+`service_role` (`src/lib/supabase/admin.ts`) para ler/gravar qualquer
+tabela de negócio seria bloqueado pelo próprio banco, antes de qualquer
+avaliação de RLS. O único uso real de `service_role` hoje no código
+(`auth.admin.createUser`/`deleteUser` em `src/app/usuarios/actions.ts`)
+não usa PostgREST — é a Auth Admin API, uma API separada — então nada
+quebra na prática.
+
+**Efeito colateral relevante para a Fase 4 (testes automatizados):**
+não há como criar/limpar dados de fixture (linhas em `usuario`,
+`cliente`, `evento`, etc.) programaticamente via `service_role`, que é
+o mecanismo padrão para isso em testes de integração. As únicas formas
+encontradas nesta sessão: (a) usar uma sessão de admin já autenticada
+no navegador para rodar uma Server Action de escrita (funciona, mas
+manual, não repetível em CI); (b) uma connection string Postgres direta
+(`psql`) — não disponível neste ambiente (só temos URL + anon key +
+service_role key, nenhuma senha de banco). Ver
+`06-testes-evidencias/testes-manuais/onboarding-navegacao.md` para o
+primeiro achado (`usuario`) e a limpeza que motivou esta investigação
+mais ampla.
 
 ## Resumo de severidade
 
