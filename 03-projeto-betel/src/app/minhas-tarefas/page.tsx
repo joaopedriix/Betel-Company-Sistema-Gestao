@@ -30,13 +30,13 @@ export default async function MinhasTarefasPage() {
   const usuario = await getUsuarioAtual();
   const supabase = await createClient();
 
-  const { data } = usuario
+  const { data, error } = usuario
     ? await supabase
         .from("tarefa_evento")
         .select("id, nome, prazo, prioridade, status, evento:evento_id(nome)")
         .eq("responsavel_id", usuario.id)
         .order("prazo", { ascending: true, nullsFirst: false })
-    : { data: null };
+    : { data: null, error: null };
 
   const tarefas = (data ?? []) as unknown as TarefaRow[];
   const pendentes = tarefas.filter((t) => t.status !== "concluida");
@@ -46,6 +46,12 @@ export default async function MinhasTarefasPage() {
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-6 sm:p-8">
       <h1 className="text-2xl font-semibold">Minhas tarefas</h1>
 
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          Não foi possível carregar suas tarefas. Tente novamente mais tarde.
+        </p>
+      ) : (
+        <>
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">Pendentes ({pendentes.length})</h2>
         {pendentes.length === 0 ? (
@@ -135,6 +141,8 @@ export default async function MinhasTarefasPage() {
           </div>
         )}
       </section>
+        </>
+      )}
     </main>
   );
 }

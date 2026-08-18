@@ -6,14 +6,7 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const hoje = new Date().toISOString().slice(0, 10);
 
-  const [
-    { count: contratosAbertos },
-    { count: contratosFechados },
-    { count: eventosTotal },
-    { count: tarefasPendentes },
-    { count: tarefasAtrasadas },
-    { count: tarefasConcluidas },
-  ] = await Promise.all([
+  const resultados = await Promise.all([
     supabase.from("contrato").select("id", { count: "exact", head: true }).eq("status", "rascunho"),
     supabase.from("contrato").select("id", { count: "exact", head: true }).eq("status", "fechado"),
     supabase.from("evento").select("id", { count: "exact", head: true }),
@@ -25,11 +18,20 @@ export default async function DashboardPage() {
       .lt("prazo", hoje),
     supabase.from("tarefa_evento").select("id", { count: "exact", head: true }).eq("status", "concluida"),
   ]);
+  const [
+    { count: contratosAbertos },
+    { count: contratosFechados },
+    { count: eventosTotal },
+    { count: tarefasPendentes },
+    { count: tarefasAtrasadas },
+    { count: tarefasConcluidas },
+  ] = resultados;
+  const erroIndicadores = resultados.some((r) => r.error);
 
   // Progresso por evento: só eventos com ao menos um contrato fechado (ou
   // seja, com tarefas geradas). Sem essa restrição, todo evento apareceria
   // com "0 de 0" e nenhum progresso real para mostrar.
-  const { data: eventosComTarefas } = await supabase
+  const { data: eventosComTarefas, error: erroProgresso } = await supabase
     .from("tarefa_evento")
     .select("evento_id, status, evento:evento_id(nome)");
 
@@ -51,18 +53,32 @@ export default async function DashboardPage() {
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-6 sm:p-8">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <Indicador label="Contratos em rascunho" valor={contratosAbertos ?? 0} />
-        <Indicador label="Contratos fechados" valor={contratosFechados ?? 0} />
-        <Indicador label="Eventos" valor={eventosTotal ?? 0} />
-        <Indicador label="Tarefas pendentes" valor={tarefasPendentes ?? 0} />
-        <Indicador label="Tarefas atrasadas" valor={tarefasAtrasadas ?? 0} destaque={(tarefasAtrasadas ?? 0) > 0} />
-        <Indicador label="Tarefas concluídas" valor={tarefasConcluidas ?? 0} />
-      </div>
+      {erroIndicadores ? (
+        <p role="alert" className="text-sm text-destructive">
+          Não foi possível carregar os indicadores. Tente novamente mais tarde.
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <Indicador label="Contratos em rascunho" valor={contratosAbertos ?? 0} />
+          <Indicador label="Contratos fechados" valor={contratosFechados ?? 0} />
+          <Indicador label="Eventos" valor={eventosTotal ?? 0} />
+          <Indicador label="Tarefas pendentes" valor={tarefasPendentes ?? 0} />
+          <Indicador
+            label="Tarefas atrasadas"
+            valor={tarefasAtrasadas ?? 0}
+            destaque={(tarefasAtrasadas ?? 0) > 0}
+          />
+          <Indicador label="Tarefas concluídas" valor={tarefasConcluidas ?? 0} />
+        </div>
+      )}
 
       <section className="flex flex-col gap-3 rounded-lg border p-4 sm:p-6">
         <h2 className="text-lg font-medium">Progresso por evento</h2>
-        {progressoPorEvento.size === 0 ? (
+        {erroProgresso ? (
+          <p role="alert" className="text-sm text-destructive">
+            Não foi possível carregar o progresso dos eventos. Tente novamente mais tarde.
+          </p>
+        ) : progressoPorEvento.size === 0 ? (
           <p className="text-sm text-muted-foreground">
             Nenhum evento com contrato fechado ainda — o progresso aparece aqui depois do
             fechamento gerar as tarefas.

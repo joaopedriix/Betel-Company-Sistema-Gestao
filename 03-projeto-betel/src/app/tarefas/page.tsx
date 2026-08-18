@@ -27,7 +27,7 @@ export default async function TarefasPage() {
   const supabase = await createClient();
   const hoje = new Date().toISOString().slice(0, 10);
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("tarefa_evento")
     .select("id, nome, prazo, status, evento:evento_id(id, nome), responsavel:responsavel_id(nome)")
     .order("prazo", { ascending: true, nullsFirst: false });
@@ -43,11 +43,19 @@ export default async function TarefasPage() {
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-6 sm:p-8">
       <h1 className="text-2xl font-semibold">Tarefas</h1>
 
-      {atrasadas.length > 0 ? (
-        <TabelaTarefas titulo={`Atrasadas (${atrasadas.length})`} tarefas={atrasadas} destaque />
-      ) : null}
-      <TabelaTarefas titulo={`Pendentes (${pendentes.length})`} tarefas={pendentes} />
-      <TabelaTarefas titulo={`Concluídas (${concluidas.length})`} tarefas={concluidas} />
+      {error ? (
+        <p role="alert" className="text-sm text-destructive">
+          Não foi possível carregar as tarefas. Tente novamente mais tarde.
+        </p>
+      ) : (
+        <>
+          {atrasadas.length > 0 ? (
+            <TabelaTarefas titulo={`Atrasadas (${atrasadas.length})`} tarefas={atrasadas} destaque />
+          ) : null}
+          <TabelaTarefas titulo={`Pendentes (${pendentes.length})`} tarefas={pendentes} />
+          <TabelaTarefas titulo={`Concluídas (${concluidas.length})`} tarefas={concluidas} />
+        </>
+      )}
     </main>
   );
 }
