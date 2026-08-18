@@ -84,10 +84,12 @@ grants, foreign keys) — não confiou cegamente no documento antigo.
 - **R8 descoberto como não sendo mais um problema:** a FK real usa
   `ON DELETE RESTRICT` em `historico_tarefa`, não `CASCADE` como o
   parecer original temia.
-- **R7 confirmado, correção pronta mas não aplicada:** `anon` tem GRANT
-  residual de `TRUNCATE`/`TRIGGER`/`REFERENCES` (nunca `SELECT`/`INSERT`/
-  `UPDATE`/`DELETE`) em todas as 11 tabelas de negócio. Aguardando
-  autorização explícita do usuário antes de aplicar o `REVOKE`.
+- **R7 corrigido:** `anon` tinha GRANT residual de `TRUNCATE`/`TRIGGER`/
+  `REFERENCES` (nunca `SELECT`/`INSERT`/`UPDATE`/`DELETE`) em todas as
+  11 tabelas de negócio. Migration `0006_revoke_anon_residual_grants.sql`
+  aplicada contra o Supabase real (autorização explícita do usuário).
+  Validado: zero grants residuais para `anon` após o REVOKE. Teste de
+  fumaça no dashboard sem regressão.
 - **R9 confirmado, correção adiada:** `cliente.usuario_id` sem
   constraint cross-tenant, mas o campo não é usado por nenhuma tela
   ainda (`portal-cliente` é stub). Corrigir agora seria especulativo.

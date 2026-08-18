@@ -209,14 +209,17 @@ todos os eventos.
 **Correção exigida:** nenhuma policy para o role `anon` em tabela de negócio.
 Todo acesso do cliente passa por `authenticated` + escopo do próprio cliente.
 
-**Status pós-implementação (verificado em 2026-08-18 diretamente no banco):**
-confirmado real, mas na forma de GRANT, não de policy: `anon` tem
-`TRUNCATE`/`TRIGGER`/`REFERENCES` residual em todas as 11 tabelas de
-negócio (nunca `SELECT`/`INSERT`/`UPDATE`/`DELETE` — nenhuma policy
-libera `anon`, e o PostgREST não expõe `TRUNCATE` via REST, então o
-risco prático hoje é baixo). Ainda assim viola least-privilege e deveria
-ser revogado. **Correção proposta, aguardando autorização para aplicar
-em produção:** `REVOKE TRUNCATE, TRIGGER, REFERENCES ON ALL TABLES IN
+**Status pós-implementação:** confirmado real em 2026-08-18, mas na forma
+de GRANT, não de policy: `anon` tinha `TRUNCATE`/`TRIGGER`/`REFERENCES`
+residual em todas as 11 tabelas de negócio (nunca `SELECT`/`INSERT`/
+`UPDATE`/`DELETE` — nenhuma policy libera `anon`, e o PostgREST não
+expõe `TRUNCATE` via REST, então o risco prático era baixo, mas violava
+least-privilege). **CORRIGIDO em 2026-08-18** — migration
+`0006_revoke_anon_residual_grants.sql` aplicada contra o Supabase real
+(autorização explícita do usuário). Validado: `select count(*) from
+information_schema.role_table_grants where grantee='anon'` retorna `0`.
+Teste de fumaça no dashboard sem regressão. Comando aplicado: `REVOKE
+TRUNCATE, TRIGGER, REFERENCES ON ALL TABLES IN
 SCHEMA public FROM anon;`.
 
 ## R8 — `onDelete: Cascade` apagando `historico_tarefa` viola "nunca excluir" — MÉDIO
@@ -316,7 +319,7 @@ só checa `is_admin_of(empresa_id)` — não checa `status`.
 | R4 | RLS não habilitado / sem default-deny em alguma tabela | Alto | Sim |
 | R5 | Sócio altera `visivel_ao_cliente`/`responsavel_id` da própria linha | Alto | **Mitigado** (`fn_tarefa_evento_guard`, confirmado 2026-08-18) |
 | R6 | Reabertura/transição de status só-admin exige trigger | Médio/Alto | **Mitigado** (`fn_tarefa_evento_guard`, confirmado 2026-08-18) |
-| R7 | Resquício de GRANT `anon` (TRUNCATE/TRIGGER/REFERENCES) | Médio | Confirmado, correção pronta, aguardando autorização |
+| R7 | Resquício de GRANT `anon` (TRUNCATE/TRIGGER/REFERENCES) | Médio | **CORRIGIDO 2026-08-18** (`0006_revoke_anon_residual_grants.sql`) |
 | R8 | Cascade delete apaga audit trail / DELETE não-admin | Médio | **Não é problema real** — schema usa `ON DELETE RESTRICT` |
 | R9 | Vínculo `cliente↔usuario` frouxo | Médio | Confirmado, impacto zero hoje (feature não usada), adiado |
 | R10 | Contrato fechado editável via API direta | Médio | **CORRIGIDO 2026-08-18** (`0005_contrato_fechado_immutable.sql`) |
