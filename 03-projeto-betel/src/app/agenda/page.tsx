@@ -130,6 +130,12 @@ function VisaoDia({
 
   return (
     <section className="flex flex-col gap-4">
+      <Link
+        href={hrefPara("mes", dataRef)}
+        className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+      >
+        ← Ver mês
+      </Link>
       <Navegacao
         titulo={`${NOMES_DIA_SEMANA[dataRef.getDay()]}, ${dataRef.getDate()} de ${NOMES_MES[dataRef.getMonth()]} de ${dataRef.getFullYear()}`}
         hrefAnterior={hrefPara("dia", anterior)}
