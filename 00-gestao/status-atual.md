@@ -163,16 +163,25 @@ poder ser usado pelo cliente real (não é só "aguardando push")
    está funcionando, antes do go-live.
 
 **Importante, mas não bloqueia o primeiro acesso:**
-8. ~~Onboarding guiado — falta UI~~ — **implementado em 2026-08-18**
-   (`OnboardingProvider`/`OnboardingTour`/Server Actions/"Refazer
-   dicas"); falta validação com evidência real no navegador (ver "Em
-   andamento" acima).
+8. ~~Onboarding guiado — falta UI~~ — **implementado e validado em
+   2026-08-18** (`OnboardingProvider`/`OnboardingTour`/Server
+   Actions/"Refazer dicas"), com evidência real no navegador para os
+   perfis admin e sócio. Ver
+   `06-testes-evidencias/testes-manuais/onboarding-navegacao.md`.
 9. Portal do cliente — não implementado; decisão pendente sobre entrar
    nesta versão ou ficar para depois (ver "Decisões aguardando
    aprovação" abaixo).
-10. Zero testes automatizados — `06-testes-evidencias/testes-automatizados/`
-    está vazio; toda validação até aqui foi manual ou via script Node
-    ad-hoc. Sem CI. Risco de regressão silenciosa em mudanças futuras.
+10. Testes automatizados — **camada unitária criada** (2026-08-18):
+    Vitest, 43 testes cobrindo as 6 funções de validação e o cálculo de
+    progresso/atraso de tarefas (`06-testes-evidencias/testes-automatizados/unit/`),
+    todos passando. **Integração e E2E ainda bloqueados**: `service_role`
+    não tem GRANT em nenhuma tabela de negócio (achado real, ver
+    `00-gestao/riscos.md`), e o usuário **rejeitou explicitamente**
+    (2026-08-18) ampliar esse GRANT em produção para viabilizar criação
+    de fixtures de teste. Alternativa aprovada — um projeto Supabase
+    separado, só para staging/testes — ainda não foi criado (decisão de
+    infraestrutura em aberto, ver "Decisões aguardando aprovação").
+    Ainda sem CI.
 11. Zero backups formais — `07-backups/` só tem `.gitkeep`; nenhum
     snapshot do banco foi salvo antes das migrations aplicadas.
 12. Menu mobile (drawer) não testado visualmente em navegador real —
@@ -209,6 +218,11 @@ poder ser usado pelo cliente real (não é só "aguardando push")
   fica só como "visualização pública sem login"
 - Deploy real (Vercel) e domínio — nenhuma decisão tomada ainda
 - Autorização explícita de push dos commits locais para o GitHub
+- Criar um projeto Supabase separado (staging/testes) para viabilizar
+  testes de integração/E2E automatizados e a validação de migrations
+  do zero (Fase 5) sem tocar produção — usuário rejeitou (2026-08-18)
+  ampliar GRANTs de `service_role` em produção como alternativa; ver
+  `00-gestao/riscos.md`
 
 ## Última atualização
 

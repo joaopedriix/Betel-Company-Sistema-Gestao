@@ -344,6 +344,56 @@ service_role key, nenhuma senha de banco). Ver
 primeiro achado (`usuario`) e a limpeza que motivou esta investigação
 mais ampla.
 
+### Decisão registrada — GRANT de `service_role` em produção REJEITADO (2026-08-18)
+
+**Proposta que cheguei a preparar** (`0008_grant_service_role_business_tables.sql`,
+depois removida): dar `service_role` acesso de leitura/escrita em todas
+as 11 tabelas de negócio via SQL Editor de produção:
+
+```sql
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.empresa to service_role;
+grant select, insert, update, delete on public.usuario to service_role;
+grant select, insert, update, delete on public.cliente to service_role;
+grant select, insert, update, delete on public.servico to service_role;
+grant select, insert, update, delete on public.checklist_modelo to service_role;
+grant select, insert, update, delete on public.tarefa_padrao to service_role;
+grant select, insert, update, delete on public.evento to service_role;
+grant select, insert, update, delete on public.contrato to service_role;
+grant select, insert, update, delete on public.contrato_servico to service_role;
+grant select, insert, update, delete on public.tarefa_evento to service_role;
+grant select, insert, update, delete on public.historico_tarefa to service_role;
+```
+
+- **Tabelas afetadas:** as 11 tabelas de negócio do schema `public`
+  (todo o domínio da aplicação).
+- **Impacto:** permanente, em produção, até ser revogado explicitamente.
+  Amplia o poder da `service_role` key de "só Auth Admin API" para
+  "leitura/escrita irrestrita via PostgREST, ignorando RLS por design".
+- **Risco:** `service_role` é uma credencial privilegiada de alto
+  blast-radius. Mesmo sem uso indevido hoje no código (R2 já proíbe
+  isso por revisão), ampliar o GRANT contorna o RLS permanentemente
+  para qualquer código futuro que use essa chave — inclusive scripts
+  esquecidos, vazamento acidental da chave, etc. É uma troca real de
+  postura de segurança, não uma mudança neutra.
+- **Necessidade real:** viabilizar criação/limpeza programática de
+  contas e dados fictícios para testes de integração automatizados
+  (Fase 4). Não é necessário para nenhuma funcionalidade do produto.
+- **Decisão do usuário (2026-08-18):** REJEITADA. Não alterar GRANTs de
+  produção para viabilizar teste. Motivo dado: `service_role` é
+  credencial privilegiada, a mudança ampliaria desnecessariamente
+  poder de escrita sobre dados reais e contornaria RLS.
+- **Alternativa aprovada:** preparar um ambiente de staging/banco
+  efêmero **separado** da produção (ex.: um segundo projeto Supabase
+  dedicado a testes), onde `service_role` pode ter GRANT amplo com
+  segurança por não tocar dado real nenhum. Ver pendência em
+  `00-gestao/status-atual.md` — depende de decisão à parte sobre criar
+  esse projeto (recurso de infraestrutura novo, fora do escopo desta
+  decisão pontual).
+- **Rollback:** não aplicável — nada foi executado contra produção.
+  `0008_grant_service_role_business_tables.sql` foi removido do
+  repositório (nunca chegou a ser commitado).
+
 ## Resumo de severidade
 
 | # | Risco | Severidade | Bloqueia? |
