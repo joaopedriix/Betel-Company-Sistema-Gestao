@@ -14,7 +14,7 @@ export default async function EditarEventoPage({
 
   const { data: evento } = await supabase
     .from("evento")
-    .select("id, nome, cliente_id, data_evento")
+    .select("id, nome, cliente_id, data_evento, area")
     .eq("id", id)
     .maybeSingle();
 
@@ -38,6 +38,7 @@ export default async function EditarEventoPage({
           nome: evento.nome,
           clienteId: evento.cliente_id,
           dataEvento: evento.data_evento ?? "",
+          area: evento.area ?? "",
         }}
         tituloBotao="Salvar alterações"
         cancelarHref={`/eventos/${evento.id}`}

@@ -4,6 +4,9 @@ import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/sidebar";
 import { getUsuarioAtual } from "@/lib/auth/usuario-atual";
+import { OnboardingProvider } from "@/components/onboarding/onboarding-provider";
+import { OnboardingTour } from "@/components/onboarding/onboarding-tour";
+import { ONBOARDING_STEPS_POR_PERFIL, ONBOARDING_VERSAO } from "@/lib/onboarding/config";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -24,10 +27,18 @@ export default async function RootLayout({
     <html lang="pt-BR" className={cn("font-sans", geist.variable)}>
       <body>
         {usuario ? (
-          <div className="flex min-h-screen flex-col md:flex-row">
-            <Sidebar perfil={usuario.perfil} nome={usuario.nome} />
-            <div className="flex-1">{children}</div>
-          </div>
+          <OnboardingProvider
+            steps={ONBOARDING_STEPS_POR_PERFIL[usuario.perfil]}
+            abrirAutomaticamente={
+              !usuario.onboardingConcluido || usuario.onboardingVersao !== ONBOARDING_VERSAO
+            }
+          >
+            <div className="flex min-h-screen flex-col md:flex-row">
+              <Sidebar perfil={usuario.perfil} nome={usuario.nome} />
+              <div className="flex-1">{children}</div>
+            </div>
+            <OnboardingTour />
+          </OnboardingProvider>
         ) : (
           children
         )}

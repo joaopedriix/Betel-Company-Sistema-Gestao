@@ -19,6 +19,7 @@ function lerCampos(formData: FormData) {
     nome: String(formData.get("nome") ?? "").trim(),
     clienteId: String(formData.get("clienteId") ?? ""),
     dataEvento: String(formData.get("dataEvento") ?? "").trim(),
+    area: String(formData.get("area") ?? "").trim(),
   };
 }
 
@@ -53,6 +54,7 @@ export async function criarEvento(
     nome: campos.nome,
     cliente_id: campos.clienteId,
     data_evento: campos.dataEvento || null,
+    area: campos.area || null,
     empresa_id: usuario.empresaId,
   });
 
@@ -93,6 +95,7 @@ export async function atualizarEvento(
       nome: campos.nome,
       cliente_id: campos.clienteId,
       data_evento: campos.dataEvento || null,
+      area: campos.area || null,
     })
     .eq("id", id)
     .select("id");

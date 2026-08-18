@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { AREAS_NEGOCIO, LABEL_AREA_NEGOCIO } from "@/lib/validation/evento";
 import type { EventoFormState } from "./actions";
 
 type Cliente = { id: string; nome: string };
@@ -14,7 +15,7 @@ type Cliente = { id: string; nome: string };
 type EventoFormProps = {
   action: (prevState: EventoFormState, formData: FormData) => Promise<EventoFormState>;
   clientes: Cliente[];
-  valoresIniciais?: { nome: string; clienteId: string; dataEvento: string };
+  valoresIniciais?: { nome: string; clienteId: string; dataEvento: string; area?: string };
   tituloBotao: string;
   cancelarHref: string;
 };
@@ -72,6 +73,25 @@ export function EventoForm({
         {state.erros?.clienteId ? (
           <p className="text-xs text-destructive">{state.erros.clienteId}</p>
         ) : null}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="area">Área</Label>
+        <select
+          id="area"
+          name="area"
+          defaultValue={valoresIniciais?.area ?? ""}
+          aria-invalid={Boolean(state.erros?.area)}
+          className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <option value="">Sem área definida</option>
+          {AREAS_NEGOCIO.map((a) => (
+            <option key={a} value={a}>
+              {LABEL_AREA_NEGOCIO[a]}
+            </option>
+          ))}
+        </select>
+        {state.erros?.area ? <p className="text-xs text-destructive">{state.erros.area}</p> : null}
       </div>
 
       <div className="flex flex-col gap-1.5">

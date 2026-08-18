@@ -11,6 +11,8 @@ export const ADMIN_ROUTES = [
   "/checklists",
   "/contratos",
   "/eventos",
+  "/tarefas",
+  "/agenda",
 ] as const;
 
 export const SOCIO_ROUTES = ["/minhas-tarefas"] as const;

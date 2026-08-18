@@ -6,6 +6,8 @@ export type UsuarioAtual = {
   perfil: Perfil;
   empresaId: string;
   nome: string;
+  onboardingConcluido: boolean;
+  onboardingVersao: number | null;
 };
 
 // Resolve o usuário logado + a empresa dele SEMPRE a partir do banco
@@ -22,7 +24,7 @@ export async function getUsuarioAtual(): Promise<UsuarioAtual | null> {
 
   const { data } = await supabase
     .from("usuario")
-    .select("id, nome, perfil, empresa_id, ativo")
+    .select("id, nome, perfil, empresa_id, ativo, onboarding_concluido, onboarding_versao")
     .eq("id", user.id)
     .single();
 
@@ -33,5 +35,7 @@ export async function getUsuarioAtual(): Promise<UsuarioAtual | null> {
     perfil: data.perfil as Perfil,
     empresaId: data.empresa_id as string,
     nome: data.nome as string,
+    onboardingConcluido: data.onboarding_concluido as boolean,
+    onboardingVersao: data.onboarding_versao as number | null,
   };
 }

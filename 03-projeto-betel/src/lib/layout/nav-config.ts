@@ -9,6 +9,7 @@ export type NavEntry =
 export const NAV_BY_PERFIL: Record<Perfil, NavEntry[]> = {
   admin: [
     { type: "link", label: "Dashboard", href: "/dashboard" },
+    { type: "link", label: "Agenda", href: "/agenda" },
     {
       type: "group",
       label: "Cadastros",
@@ -16,6 +17,7 @@ export const NAV_BY_PERFIL: Record<Perfil, NavEntry[]> = {
         { label: "Clientes", href: "/clientes" },
         { label: "Sócios/Usuários", href: "/usuarios" },
         { label: "Serviços", href: "/servicos" },
+        { label: "Checklists", href: "/checklists" },
       ],
     },
     {
@@ -24,6 +26,7 @@ export const NAV_BY_PERFIL: Record<Perfil, NavEntry[]> = {
       items: [
         { label: "Eventos", href: "/eventos" },
         { label: "Contratos", href: "/contratos" },
+        { label: "Tarefas", href: "/tarefas" },
       ],
     },
   ],

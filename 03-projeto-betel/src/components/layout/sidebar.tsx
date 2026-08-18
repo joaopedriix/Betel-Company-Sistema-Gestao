@@ -9,6 +9,21 @@ import { LogoutButton } from "@/components/logout-button";
 import { cn } from "@/lib/utils";
 import { NAV_BY_PERFIL, type NavEntry } from "@/lib/layout/nav-config";
 import type { Perfil } from "@/lib/auth/rotas";
+import { useOnboarding } from "@/components/onboarding/onboarding-provider";
+
+function RefazerDicasButton() {
+  const { steps, reiniciar } = useOnboarding();
+  if (steps.length === 0) return null;
+  return (
+    <button
+      type="button"
+      onClick={reiniciar}
+      className="mb-2 block text-left text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+    >
+      Refazer dicas
+    </button>
+  );
+}
 
 function isEntryActive(entry: NavEntry, pathname: string): boolean {
   if (entry.type === "link") return pathname.startsWith(entry.href);
@@ -125,7 +140,8 @@ export function Sidebar({ perfil, nome }: { perfil: Perfil; nome: string }) {
             </div>
             {nav}
             <div className="border-t p-3">
-              <p className="mb-2 truncate text-xs text-muted-foreground">{nome}</p>
+              <p className="mb-1 truncate text-xs text-muted-foreground">{nome}</p>
+              <RefazerDicasButton />
               <LogoutButton />
             </div>
           </div>
@@ -139,7 +155,8 @@ export function Sidebar({ perfil, nome }: { perfil: Perfil; nome: string }) {
         </div>
         {nav}
         <div className="border-t p-3">
-          <p className="mb-2 truncate text-xs text-muted-foreground">{nome}</p>
+          <p className="mb-1 truncate text-xs text-muted-foreground">{nome}</p>
+          <RefazerDicasButton />
           <LogoutButton />
         </div>
       </aside>
