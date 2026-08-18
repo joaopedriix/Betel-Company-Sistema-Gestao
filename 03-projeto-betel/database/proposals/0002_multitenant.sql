@@ -1,19 +1,20 @@
 -- =====================================================================
--- PROPOSTA — revisao 3 (correcoes aplicadas em 2026-08-17)
+-- APLICADA em 2026-08-17 — revisao 5 (2 bugs reais achados DEPOIS de
+-- executar, ao rodar dados de teste de verdade — corrigidos aqui para
+-- que rodar este arquivo do zero num ambiente novo já saia correto)
 -- Betel Company — Sistema de Gestão
 -- Migration: multitenant (empresa/tenant)
 -- =====================================================================
 --
 -- Este arquivo fica em database/proposals/, FORA do fluxo de deploy.
 -- database/schema.sql + policies.sql + grants.sql continuam sendo a
--- unica fonte aplicada no banco real ate esta proposta ser aprovada e
--- promovida (ex.: renomeada para database/0002_multitenant.sql e
--- documentada como aplicada no changelog).
+-- fonte "base" (pre-multitenant); este arquivo é o incremento aplicado
+-- por cima, via psql, contra o Supabase real da Betel.
 --
 -- Estrategia completa e justificativa: 04-analises/plano-migration-tenant.md
 -- Modelo e policies detalhados: 04-analises/arquitetura-multitenant.md
 --
--- CORRECOES NESTA REVISAO (achadas na revisao final antes da execucao):
+-- CORRECOES NA REVISAO (achadas na revisao final ANTES de executar):
 --   1. Tabela empresa agora tem RLS habilitado+forcado, 1 policy de
 --      SELECT (cada usuario ve so a propria empresa) e GRANT SELECT
 --      para authenticated. Faltava isso na v1 — mesmo bug de GRANT
@@ -26,10 +27,29 @@
 --      faz as duas checagens juntas. Adicionado tambem um trigger de
 --      imutabilidade: empresa_id nunca pode ser alterado apos a criacao
 --      da linha, nem por admin, em nenhuma das 10 tabelas.
---   4. (revisao 3) Corrigida a ORDEM: a policy de "empresa" so pode ser
---      criada DEPOIS de current_empresa_id() existir — na v2 a policy
---      vinha antes da funcao, o que causaria erro "function does not
---      exist". Movida para depois da secao de funcoes.
+--   4. Corrigida a ORDEM: a policy de "empresa" so pode ser criada
+--      DEPOIS de current_empresa_id() existir.
+--
+-- BUGS REAIS achados DEPOIS de executar, ao popular dados de teste de
+-- verdade e rodar 27 casos de teste de isolamento (nenhuma revisao
+-- estatica pegaria isso — só apareceu com INSERT/SELECT reais):
+--   5a. fn_log_tarefa_evento() (trigger PRE-EXISTENTE, da Fase 4) nao
+--       preenchia empresa_id ao inserir em historico_tarefa, que agora
+--       é NOT NULL — toda criacao de tarefa quebrava. Corrigido: a
+--       funcao agora usa new.empresa_id em cada INSERT de historico.
+--   5b. Recursao infinita de RLS (Postgres error 42P17) entre
+--       evento <-> tarefa_evento: evento_socio_select fazia
+--       "exists (select 1 from tarefa_evento ...)" DIRETO (sujeito a
+--       RLS), e tarefa_evento_cliente_select fazia o mesmo com evento —
+--       cada SELECT reavaliava a RLS da outra tabela, que reavaliava a
+--       primeira de novo. Esse par JÁ EXISTIA desde a Fase 4 (schema
+--       original, antes de qualquer coisa de tenant) — nunca foi
+--       detectado porque nunca houve dados reais em evento+tarefa_evento
+--       com sócio/cliente testando ao mesmo tempo. Corrigido: nova
+--       funcao SECURITY DEFINER socio_responsavel_no_evento(evento_id),
+--       que bypassa RLS na consulta interna e quebra o ciclo.
+-- Resultado: 27/27 casos de teste de isolamento passaram após as 2
+-- correções — ver 04-analises/testes-isolamento-tenant.md.
 --
 -- Ordem de execucao (dentro de uma unica transacao):
 --   1. Criar tabela empresa (sem RLS ainda)
@@ -38,10 +58,12 @@
 --   4. Backfill: empresa_id = Betel em todas as linhas existentes
 --   5. Validar explicitamente (RAISE EXCEPTION se sobrar NULL)
 --   6. Tornar empresa_id not null + FK + indice nas 10 tabelas
---   7. Criar/atualizar funcoes de autorizacao
+--   7. Criar/atualizar funcoes de autorizacao (inclui socio_responsavel_no_evento)
 --   8. Habilitar RLS + policy + grant em empresa (agora que as funcoes existem)
 --   9. Criar trigger de imutabilidade de empresa_id nas 10 tabelas
---  10. Recriar as 23 policies com is_admin_of(empresa_id)
+--  10. Corrigir fn_log_tarefa_evento() para preencher empresa_id
+--  11. Recriar as 23 policies com is_admin_of(empresa_id) e a policy de
+--      evento_socio_select usando socio_responsavel_no_evento()
 -- =====================================================================
 
 begin;
@@ -201,6 +223,21 @@ as $$
   );
 $$;
 
+-- Quebra a recursao de RLS entre evento <-> tarefa_evento (bug 5b,
+-- pre-existente desde a Fase 4, achado ao rodar testes de isolamento com
+-- dados reais). SECURITY DEFINER: a consulta interna a tarefa_evento
+-- NAO reavalia a RLS de tarefa_evento (que por sua vez consultaria
+-- evento de novo, causando o loop).
+create or replace function public.socio_responsavel_no_evento(p_evento_id uuid)
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (
+    select 1 from public.tarefa_evento te
+    where te.evento_id = p_evento_id and te.responsavel_id = auth.uid()
+  );
+$$;
+
 -- ---------------------------------------------------------------------
 -- 8. RLS em empresa (so agora, com current_empresa_id() ja existindo)
 -- ---------------------------------------------------------------------
@@ -244,7 +281,58 @@ create trigger trg_tarefa_evento_empresa_immutable    before update on public.ta
 create trigger trg_historico_tarefa_empresa_immutable before update on public.historico_tarefa for each row execute function public.fn_empresa_id_immutable();
 
 -- ---------------------------------------------------------------------
--- 10. Policies — recriar as 23 usando is_admin_of(empresa_id).
+-- 10. Correção do bug 5a: fn_log_tarefa_evento() (trigger PRE-EXISTENTE
+-- da Fase 4) não preenchia empresa_id ao inserir em historico_tarefa,
+-- que agora é NOT NULL — toda criação de tarefa quebrava. Redeclarada
+-- aqui com empresa_id = new.empresa_id em cada INSERT de histórico.
+-- ---------------------------------------------------------------------
+create or replace function public.fn_log_tarefa_evento()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if tg_op = 'INSERT' then
+    insert into public.historico_tarefa (tarefa_evento_id, tipo_evento, usuario_id, detalhe, empresa_id)
+    values (new.id, 'criacao', v_uid,
+            jsonb_build_object('nome', new.nome, 'status', new.status), new.empresa_id);
+    return new;
+  end if;
+
+  if new.status <> old.status then
+    if new.status = 'concluida' then
+      insert into public.historico_tarefa (tarefa_evento_id, tipo_evento, usuario_id, detalhe, empresa_id)
+      values (new.id, 'conclusao', v_uid, jsonb_build_object('de', old.status, 'para', new.status), new.empresa_id);
+    elsif old.status = 'concluida' then
+      insert into public.historico_tarefa (tarefa_evento_id, tipo_evento, usuario_id, detalhe, empresa_id)
+      values (new.id, 'reabertura', v_uid, jsonb_build_object('de', old.status, 'para', new.status), new.empresa_id);
+    else
+      insert into public.historico_tarefa (tarefa_evento_id, tipo_evento, usuario_id, detalhe, empresa_id)
+      values (new.id, 'alteracao_status', v_uid, jsonb_build_object('de', old.status, 'para', new.status), new.empresa_id);
+    end if;
+  end if;
+
+  if new.responsavel_id is distinct from old.responsavel_id then
+    insert into public.historico_tarefa (tarefa_evento_id, tipo_evento, usuario_id, detalhe, empresa_id)
+    values (new.id, 'troca_responsavel', v_uid,
+            jsonb_build_object('de', old.responsavel_id, 'para', new.responsavel_id), new.empresa_id);
+  end if;
+
+  if new.prazo is distinct from old.prazo then
+    insert into public.historico_tarefa (tarefa_evento_id, tipo_evento, usuario_id, detalhe, empresa_id)
+    values (new.id, 'troca_prazo', v_uid,
+            jsonb_build_object('de', old.prazo, 'para', new.prazo), new.empresa_id);
+  end if;
+
+  return new;
+end;
+$$;
+
+-- ---------------------------------------------------------------------
+-- 11. Policies — recriar as 23 usando is_admin_of(empresa_id).
 -- Ver 04-analises/arquitetura-multitenant.md (Parte 5) para a tabela
 -- completa de quem consulta/insere/atualiza/exclui por tabela.
 -- ---------------------------------------------------------------------
@@ -315,15 +403,16 @@ drop policy if exists evento_cliente_select on public.evento;
 create policy evento_cliente_select on public.evento
   for select using (empresa_id = public.current_empresa_id() and cliente_id = public.current_cliente_id());
 
+-- Correção do bug 5b: usa socio_responsavel_no_evento() (SECURITY
+-- DEFINER) em vez de "exists (select 1 from tarefa_evento ...)" direto
+-- — a versão direta causava recursão infinita de RLS com
+-- tarefa_evento_cliente_select (que consulta evento).
 drop policy if exists evento_socio_select on public.evento;
 create policy evento_socio_select on public.evento
   for select using (
     empresa_id = public.current_empresa_id()
     and public.current_perfil() = 'socio'
-    and exists (
-      select 1 from public.tarefa_evento te
-      where te.evento_id = evento.id and te.responsavel_id = auth.uid()
-    )
+    and public.socio_responsavel_no_evento(evento.id)
   );
 
 -- contrato

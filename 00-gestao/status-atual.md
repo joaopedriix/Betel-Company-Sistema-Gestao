@@ -33,9 +33,8 @@ Em andamento
 
 ## Em andamento
 
-- Nenhuma tarefa em andamento — aguardando decisão do usuário sobre
-  criar um segundo tenant de teste (`04-analises/testes-isolamento-tenant.md`)
-  ou seguir direto para cadastros
+- Nenhuma tarefa em andamento — multitenant validado (27/27 testes de
+  isolamento passaram), pronto para retomar cadastros
 
 ## Próxima tarefa
 
@@ -48,11 +47,12 @@ Em andamento
 ## Pendências
 
 - Ver `00-gestao/pendencias.md`
-- Testes de isolamento entre tenants ainda não executados — precisa de
-  um segundo tenant fictício (`04-analises/testes-isolamento-tenant.md`)
+- Decidir: manter os dados fictícios de teste (tenant "Empresa B —
+  Teste" + 5 usuários) como fixture permanente, ou limpar antes de
+  qualquer demonstração real
 - Promover `03-projeto-betel/database/proposals/0002_multitenant.sql`
-  para `database/` (hoje o schema real já reflete a migration, mas o
-  arquivo formal ainda está na pasta de proposta)
+  para `database/` (hoje o schema real já reflete a migration, incluindo
+  os 2 hotfixes; o arquivo formal ainda está na pasta de proposta)
 
 ## Riscos
 

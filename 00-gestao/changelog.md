@@ -171,3 +171,30 @@ revalidados via API REST após a migration — funcionando, agora com
 testes de isolamento (`04-analises/testes-isolamento-tenant.md`) —
 requer criar dados fictícios novos, deixado para decisão explícita do
 usuário.
+
+**Alteração:** Criado o tenant fictício "Empresa B — Teste" com 5
+usuários e dados de negócio sintéticos, e executados os 21 (27 com
+sub-itens) testes de isolamento propostos — **27/27 passaram**
+**Arquivos:** `04-analises/testes-isolamento-tenant.md` (resultados),
+`03-projeto-betel/database/proposals/0002_multitenant.sql` (2 correções
+incorporadas, ver abaixo)
+**Bugs reais encontrados DURANTE a execução dos testes (nenhuma revisão
+estática pegaria isso):**
+1. `fn_log_tarefa_evento()` (trigger pré-existente da Fase 4) não
+   preenchia `empresa_id` ao gravar em `historico_tarefa` (agora `NOT
+   NULL`) — toda criação de tarefa quebrava. Corrigido no banco real e
+   incorporado ao arquivo da migration.
+2. Recursão infinita de RLS (`42P17`) entre `evento` e `tarefa_evento` —
+   par de policies **pré-existente desde a Fase 4** (`evento_socio_select`
+   consultava `tarefa_evento` direto, e vice-versa com
+   `tarefa_evento_cliente_select`), nunca detectado porque nunca havia
+   dados reais nessas duas tabelas com sócio/cliente testando ao mesmo
+   tempo. Corrigido com nova função `SECURITY DEFINER`
+   `socio_responsavel_no_evento()`.
+**Resultado dos testes:** 27/27 casos de isolamento passaram após as
+correções — leitura, troca de ID por URL/API, inserção/atualização
+maliciosa de `empresa_id`, e as 6 combinações de perfil×tenant, todos
+bloqueados corretamente no backend.
+**Pendência:** dados fictícios de teste (tenant "Empresa B — Teste" + 5
+usuários + registros) permanecem no banco — decidir se mantêm como
+fixture ou são limpos antes de demonstração real.
