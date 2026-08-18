@@ -29,6 +29,12 @@
       `01-documentacao/requisitos/backlog.md`)
 - [x] Integração com Google Calendar — fora do escopo do MVP
 - [x] Integração com Apple Calendar — fora do escopo do MVP
+- [ ] **Integração via API** (pedido do usuário, 2026-08-18) — requisito
+      novo de produto/arquitetura. Falta definir: autenticação (API key
+      por empresa? OAuth?), escopo (só leitura ou também escrita), quais
+      recursos expor (contratos, eventos, tarefas, checklist), rate
+      limiting, versionamento. Não prometer no material de demonstração
+      ao cliente enquanto não existir de fato.
 
 ## Financeiro
 
