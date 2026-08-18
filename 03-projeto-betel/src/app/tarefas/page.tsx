@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
+import { estaAtrasada } from "@/lib/tarefas/derivacao";
 
 const LABEL_STATUS: Record<string, string> = {
   pendente: "Pendente",
@@ -33,10 +34,8 @@ export default async function TarefasPage() {
     .order("prazo", { ascending: true, nullsFirst: false });
 
   const tarefas = (data ?? []) as unknown as TarefaRow[];
-  const atrasadas = tarefas.filter((t) => t.status !== "concluida" && t.prazo && t.prazo < hoje);
-  const pendentes = tarefas.filter(
-    (t) => t.status !== "concluida" && !(t.prazo && t.prazo < hoje),
-  );
+  const atrasadas = tarefas.filter((t) => estaAtrasada(t, hoje));
+  const pendentes = tarefas.filter((t) => t.status !== "concluida" && !estaAtrasada(t, hoje));
   const concluidas = tarefas.filter((t) => t.status === "concluida");
 
   return (

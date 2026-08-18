@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
+import { calcularProgresso } from "@/lib/tarefas/derivacao";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -37,16 +38,27 @@ export default async function DashboardPage() {
 
   type LinhaTarefa = { evento_id: string; status: string; evento: { nome: string } | null };
   const linhas = (eventosComTarefas ?? []) as unknown as LinhaTarefa[];
-  const progressoPorEvento = new Map<string, { nome: string; total: number; concluidas: number }>();
+  const tarefasPorEvento = new Map<string, { nome: string; tarefas: LinhaTarefa[] }>();
   for (const linha of linhas) {
-    const atual = progressoPorEvento.get(linha.evento_id) ?? {
+    const atual = tarefasPorEvento.get(linha.evento_id) ?? {
       nome: linha.evento?.nome ?? "—",
-      total: 0,
-      concluidas: 0,
+      tarefas: [],
     };
-    atual.total += 1;
-    if (linha.status === "concluida") atual.concluidas += 1;
-    progressoPorEvento.set(linha.evento_id, atual);
+    atual.tarefas.push(linha);
+    tarefasPorEvento.set(linha.evento_id, atual);
+  }
+  const progressoPorEvento = new Map<
+    string,
+    { nome: string; total: number; concluidas: number; percentual: number }
+  >();
+  for (const [eventoId, { nome, tarefas }] of tarefasPorEvento) {
+    const concluidas = tarefas.filter((t) => t.status === "concluida").length;
+    progressoPorEvento.set(eventoId, {
+      nome,
+      total: tarefas.length,
+      concluidas,
+      percentual: calcularProgresso(tarefas),
+    });
   }
 
   return (
@@ -91,7 +103,7 @@ export default async function DashboardPage() {
                   {p.nome}
                 </Link>
                 <span className="text-muted-foreground">
-                  {p.concluidas} de {p.total} ({Math.round((p.concluidas / p.total) * 100)}%)
+                  {p.concluidas} de {p.total} ({p.percentual}%)
                 </span>
               </li>
             ))}
