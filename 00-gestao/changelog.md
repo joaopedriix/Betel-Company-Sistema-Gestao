@@ -311,3 +311,32 @@ funcional a partir do rodapé; menu mobile (drawer) não pôde ser verificado
 visualmente por limitação da ferramenta de automação de navegador nesta
 sessão, mas usa o mesmo padrão de breakpoint Tailwind (`md:hidden`/`md:flex`)
 já validado em outras telas do projeto
+
+**Alteração:** feat: migration de onboarding guiado + inventário de pendências para entrega
+**Arquivos:** `03-projeto-betel/database/0004_onboarding.sql`, `00-gestao/status-atual.md`
+**Motivo:** usuário aprovou explicitamente a aplicação da migration
+(`0004_onboarding.sql`, que estava pausada aguardando aprovação) e pediu
+um levantamento completo do que falta para entregar o MVP ao cliente
+**Migration:** aplicada contra o Supabase real via SQL Editor (produção);
+adiciona `onboarding_concluido`/`onboarding_versao`/`onboarding_concluido_em`
+em `usuario`, policy `usuario_self_update_onboarding` e trigger
+`fn_usuario_self_update_guard` (mesmo padrão de `fn_tarefa_evento_guard`:
+RLS é row-level, então o trigger bloqueia não-admin de alterar
+nome/email/perfil/ativo/empresa_id via UPDATE direto, mesmo com a policy
+liberando a própria linha)
+**Resultado dos testes:** migration validada diretamente no schema (3
+colunas, 1 policy, 1 trigger, 1 função — todos confirmados via query);
+teste de fumaça (reload do dashboard logado) sem regressão. UI do
+onboarding (`OnboardingProvider`/`OnboardingTour`) ainda não implementada
+— só a base de dados está pronta
+**Levantamento de pendências:** auditoria cruzando `00-gestao/riscos.md`
+(parecer de segurança da Fase 4) com os triggers reais existentes no
+banco hoje — confirmou que R5/R6 (transições de status só-admin) já
+estão mitigados na prática via `fn_tarefa_evento_guard`, mesmo que o
+documento de riscos ainda não refletisse isso; R7-R9 nunca foram
+reverificados contra o schema real; R10 (contrato fechado editável via
+API direta) segue confirmadamente aberto. Nenhum deploy real (Vercel)
+existe ainda — sistema só roda em Codespace de desenvolvimento; zero
+testes automatizados; zero backups formais. Lista completa e priorizada
+em `00-gestao/status-atual.md`, seção "Pendências para entrega ao
+cliente"
