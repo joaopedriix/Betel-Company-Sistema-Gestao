@@ -33,6 +33,50 @@ fictícios de teste.
 1. **Nome oficial do produto e identidade visual:** ainda pendentes,
    sem impacto técnico até agora.
 
+## Cadastros base implementados e validados (2026-08-18)
+
+Clientes, Sócios/Usuários e Serviços — os três primeiros CRUDs reais do
+MVP, construídos sobre o schema multitenant já existente. Nenhuma
+migration foi necessária: `cliente` e `servico` já tinham os campos
+suficientes (nome/email/telefone/ativo e nome/descrição/ativo); `usuario`
+idem. Ver `00-gestao/relatorio-sessao-2026-08-17-18.md` para o relato
+completo da fase e `06-testes-evidencias/testes-manuais-cadastros.md`
+para o roteiro de testes executado.
+
+- **Só perfil `admin` cria/edita/inativa** nos três cadastros (rotas
+  `/clientes`, `/usuarios`, `/servicos` estão em `ADMIN_ROUTES`,
+  bloqueadas por middleware para outros perfis). `empresa_id` é sempre
+  resolvido no servidor via `getUsuarioAtual()`, nunca aceito do
+  formulário — reforçado pelo trigger de imutabilidade já existente.
+- **Decisão confirmada:** cadastro de usuários cria só perfis
+  `admin`/`socio`. Login do perfil `cliente` fica para quando o portal
+  do cliente for implementado (fora do escopo desta fase).
+- **`service_role` usado em um único ponto** (`criarUsuario`, só para
+  `auth.admin.createUser` via Admin API) — nunca para ler/gravar linhas
+  de negócio; confirmado também empiricamente: a chave `service_role`
+  nem tem GRANT na tabela `usuario` via API REST, só o role
+  `authenticated` tem.
+- **Limitação conhecida, não corrigida nesta fase:** a senha temporária
+  do usuário recém-criado é passada via query string
+  (`/usuarios/[id]?senha=...`) e exibida uma única vez na tela — mas
+  fica potencialmente no histórico do navegador caso alguém salve esse
+  link específico. Risco baixo (só quem já tem acesso admin vê a tela),
+  mas vale registrar para uma iteração futura (ex.: mostrar via estado
+  de página em vez de query string).
+- **Gap de infraestrutura encontrado durante o teste, corrigido:** não
+  havia nenhum botão de logout montado em nenhuma tela (o componente
+  `LogoutButton` existia mas órfão). Adicionado minimamente em
+  `/dashboard` e `/minhas-tarefas` — sem isso não era possível trocar de
+  sessão para testar bloqueio de rota por perfil.
+- **Bug real de infraestrutura encontrado e corrigido:** ao testar via
+  navegador pelo túnel do Codespace, o proxy de port-forwarding reescreve
+  o header `Origin` para `localhost:3000` ao repassar a requisição
+  internamente (preservando `x-forwarded-host` com o domínio real do
+  túnel) — a proteção CSRF de Server Actions do Next.js rejeitava por
+  isso. Corrigido adicionando `"localhost:3000"` a
+  `experimental.serverActions.allowedOrigins` em `next.config.ts`,
+  restrito a `NODE_ENV !== "production"`.
+
 ## Não decidido / não aplicável ainda
 
 - Domínio de produção.

@@ -229,3 +229,34 @@ corrigido dentro de `0002_multitenant.sql`
 **Resultado dos testes:** lint 0 erros, build OK (TypeScript sem erros),
 sem testes automatizados ainda (não implementados), sem migrations
 pendentes inesperadas, sem arquivos sensíveis não rastreados.
+
+## 2026-08-18
+
+**Alteração:** feat: cadastros base (Clientes, Sócios/Usuários, Serviços)
+**Arquivos:** `src/app/clientes/`, `src/app/usuarios/`, `src/app/servicos/`,
+`src/lib/auth/usuario-atual.ts`, `src/lib/supabase/admin.ts`,
+`src/lib/validation/`, `src/components/ui/{input,label,badge,textarea}.tsx`,
+`next.config.ts`, `src/app/dashboard/page.tsx`, `src/app/minhas-tarefas/page.tsx`
+**Motivo:** Fase 5 — três primeiros CRUDs reais do MVP; nenhuma migration
+necessária (schema multitenant já tinha os campos suficientes)
+**Segurança:** `empresa_id` sempre resolvido no servidor via
+`getUsuarioAtual()`, nunca aceito do formulário; só perfil `admin` cria/
+edita (rotas em `ADMIN_ROUTES`, bloqueadas por middleware); `service_role`
+usado só para `auth.admin.createUser` (criação de login), nunca para
+dado de negócio — confirmado que a chave nem tem GRANT na tabela
+`usuario` via API REST
+**Bug real encontrado e corrigido:** proxy de port-forwarding do
+Codespace reescreve o header `Origin` para `localhost:3000` ao repassar
+a requisição, quebrando a proteção CSRF de Server Actions do Next —
+corrigido em `next.config.ts` (`allowedOrigins`, só fora de produção)
+**Resultado dos testes:** lint 0 erros; build OK (20 rotas, TypeScript
+sem erros); testes funcionais completos dos 3 cadastros via navegador
+(CRUD, busca, ativar/inativar, duplicidade); testes de segurança via API
+REST com JWT real de um usuário sócio (RLS bloqueando INSERT/UPDATE nas
+3 tabelas, sócio só vendo a própria linha em `usuario`, tentativa de
+auto-promover para `admin` sem efeito); bloqueio de rota por perfil
+confirmado no navegador (`/clientes`, `/usuarios`, `/servicos` e acesso
+direto por ID redirecionam sócio para `/minhas-tarefas`); regressão de
+isolamento entre tenants não reexecutada com fixture completa — decisão
+registrada em `04-analises/decisoes-do-mvp.md` (nenhuma policy/função/
+schema mudou nesta fase, confirmado via `git status`)

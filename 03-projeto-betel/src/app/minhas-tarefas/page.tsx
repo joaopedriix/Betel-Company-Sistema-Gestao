@@ -1,5 +1,13 @@
 import { EmConstrucao } from "@/components/em-construcao";
+import { LogoutButton } from "@/components/logout-button";
 
 export default function Page() {
-  return <EmConstrucao titulo="Minhas tarefas" />;
+  return (
+    <div>
+      <div className="flex justify-end p-4">
+        <LogoutButton />
+      </div>
+      <EmConstrucao titulo="Minhas tarefas" />
+    </div>
+  );
 }

@@ -2,9 +2,9 @@
 
 ## Fase atual
 
-Fase 6 concluída (auditoria + fundação multitenant aplicada). Fase 5
-(implementação incremental) pronta para retomar — cadastros base é a
-próxima funcionalidade.
+Fase 5, cadastros base (clientes, sócios/usuários, serviços) —
+implementados e validados (funcional + segurança). Próxima etapa:
+contratos.
 
 ## Status
 
@@ -35,19 +35,26 @@ Em andamento
   sem `empresa_id`, recursão de RLS evento↔tarefa_evento); dados
   fictícios de teste limpos depois; fixture reproduzível criado em
   `03-projeto-betel/database/fixtures/`
+- Fase 5 — **Cadastros base (Clientes, Sócios/Usuários, Serviços)**
+  implementados e validados: funcional completo (CRUD, busca,
+  ativar/inativar, duplicidade) + segurança (RLS via API com JWT real de
+  sócio, bloqueio de rota por perfil, `empresa_id` sempre server-side e
+  imutável). Ver `04-analises/decisoes-do-mvp.md` e
+  `06-testes-evidencias/testes-manuais-cadastros.md`. Bug real de
+  infraestrutura encontrado e corrigido: CSRF de Server Actions via
+  proxy do Codespace reescrevendo `Origin` para `localhost:3000`.
 
 ## Em andamento
 
-- Nenhuma tarefa em andamento — multitenant validado (27/27 testes de
-  isolamento passaram), pronto para retomar cadastros
+- Nenhuma tarefa em andamento — cadastros base validados, aguardando
+  commit e autorização para a próxima etapa (contratos)
 
 ## Próxima tarefa
 
 - Ordem da Fase 5 (uma por vez, com teste antes de seguir): ~~autenticação~~
-  (concluída) → cadastros base (clientes, usuários/sócios, serviços,
-  agora multitenant) → contratos → geração automática de checklist →
-  "Minhas tarefas" → conclusão/checklist automático → dashboard do
-  gestor
+  ~~cadastros base~~ (concluídos) → contratos → geração automática de
+  checklist → "Minhas tarefas" → conclusão/checklist automático →
+  dashboard do gestor
 
 ## Pendências
 
@@ -58,6 +65,9 @@ Em andamento
 - Nenhuma migration não testada do zero em ambiente efêmero (só análise
   estática) — sem risco real hoje (já validada contra o banco real), mas
   registrar para quando houver ambiente de CI/staging
+- Não montar em nenhuma tela real: portal do cliente, layout/navegação
+  completos (só um botão "Sair" mínimo foi adicionado em `/dashboard` e
+  `/minhas-tarefas` para viabilizar os testes de troca de sessão)
 
 ## Riscos
 
@@ -71,9 +81,9 @@ Em andamento
 
 - Se o portal do cliente com login entra nesta primeira versão do MVP ou
   fica só como "visualização pública sem login"
-- Push dos commits locais (`5bc20bd`, `2411dc1`, `6a4927a` + o desta
-  limpeza) para o GitHub
+- Autorização para iniciar a próxima etapa (contratos) após revisão do
+  relatório dos cadastros base
 
 ## Última atualização
 
-2026-08-17
+2026-08-18
