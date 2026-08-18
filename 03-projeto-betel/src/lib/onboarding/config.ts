@@ -11,7 +11,7 @@ export type OnboardingStep = {
 // já completaram uma versão anterior veem o tour de novo automaticamente
 // uma única vez (onboarding_versao < ONBOARDING_VERSAO), sem perder o
 // "concluído" de quem já viu a versão atual.
-export const ONBOARDING_VERSAO = 1;
+export const ONBOARDING_VERSAO = 2;
 
 export const ONBOARDING_STEPS_POR_PERFIL: Record<Perfil, OnboardingStep[]> = {
   admin: [
@@ -22,22 +22,11 @@ export const ONBOARDING_STEPS_POR_PERFIL: Record<Perfil, OnboardingStep[]> = {
         "Aqui você acompanha toda a operação: cadastros, contratos, eventos e o checklist de cada um. Este tour mostra rapidamente onde encontrar cada coisa — você pode pular ou refazer quando quiser.",
     },
     {
-      id: "clientes",
-      title: "Clientes",
-      description: "Cadastre e gerencie os clientes da Betel.",
+      id: "cadastros",
+      title: "Cadastros",
+      description:
+        "Clientes, sócios/usuários e serviços da Betel ficam no menu \"Cadastros\" — a base de tudo antes de criar eventos e contratos.",
       href: "/clientes",
-    },
-    {
-      id: "usuarios",
-      title: "Sócios e usuários",
-      description: "Gerencie quem tem acesso ao sistema e qual o perfil de cada pessoa.",
-      href: "/usuarios",
-    },
-    {
-      id: "servicos",
-      title: "Serviços",
-      description: "Cadastre os serviços oferecidos pela Betel.",
-      href: "/servicos",
     },
     {
       id: "checklist",
@@ -46,17 +35,11 @@ export const ONBOARDING_STEPS_POR_PERFIL: Record<Perfil, OnboardingStep[]> = {
         "Cada serviço pode ter um checklist padrão. Quando um contrato com esse serviço é fechado, as tarefas do checklist são geradas automaticamente para o evento.",
     },
     {
-      id: "eventos",
-      title: "Eventos",
-      description: "Cadastre os eventos da Betel, vinculados a um cliente.",
-      href: "/eventos",
-    },
-    {
-      id: "contratos",
-      title: "Contratos",
+      id: "eventos-contratos",
+      title: "Eventos e contratos",
       description:
-        "Um contrato liga um cliente, um evento e os serviços contratados. Fica em rascunho até você fechar.",
-      href: "/contratos",
+        "Cadastre o evento do cliente e depois o contrato, ligando cliente, evento e os serviços contratados. O contrato fica em rascunho até você fechar.",
+      href: "/eventos",
     },
     {
       id: "fechamento",
@@ -65,16 +48,10 @@ export const ONBOARDING_STEPS_POR_PERFIL: Record<Perfil, OnboardingStep[]> = {
         "Ao fechar um contrato, o sistema gera automaticamente as tarefas do checklist de cada serviço contratado, com prazo calculado a partir da data do evento. Depois de fechado, o contrato fica protegido contra alterações.",
     },
     {
-      id: "tarefas",
-      title: "Tarefas geradas",
+      id: "acompanhamento",
+      title: "Acompanhamento",
       description:
-        "As tarefas geradas aparecem para o responsável de cada uma em \"Minhas tarefas\", e você acompanha o progresso de cada evento pelo dashboard.",
-    },
-    {
-      id: "dashboard",
-      title: "Dashboard",
-      description:
-        "Aqui você vê a visão geral: contratos em aberto e fechados, tarefas pendentes/atrasadas/concluídas, e o progresso de cada evento.",
+        "As tarefas geradas aparecem para o responsável de cada uma; você acompanha o progresso de cada evento e a visão geral pelo Dashboard.",
       href: "/dashboard",
     },
   ],
