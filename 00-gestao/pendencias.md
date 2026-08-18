@@ -44,7 +44,9 @@
 
 ## Arquitetura e infraestrutura
 
-- [ ] Necessidade de multiempresa ou multitenancy
+- [x] Necessidade de multiempresa ou multitenancy — RESOLVIDO 2026-08-17:
+      multiempresa desde o MVP, Betel é o primeiro tenant. Ver
+      `04-analises/arquitetura-multitenant.md`
 - [x] Tecnologia final do frontend — APROVADO 2026-08-17: Next.js + Supabase
       (ver `00-gestao/decisoes-tecnicas.md`)
 - [x] Hospedagem — APROVADO: Vercel + Supabase Cloud
