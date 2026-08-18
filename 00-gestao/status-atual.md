@@ -51,11 +51,20 @@ Em andamento — validação final concluída, aguardando autorização de push
   `04-analises/decisoes-do-mvp.md`,
   `06-testes-evidencias/matriz-de-testes-mvp.md`,
   `00-gestao/registro-de-bugs.md`.
+- **Gate final de validação antes do push** (2026-08-18): 27 testes de
+  isolamento reexecutados de verdade (fixture nova, 6 logins reais, 29
+  requisições via API) — **29/29 passaram**; T14 (sócio lê
+  `tarefa_padrao`) executado de verdade — passou; migrations `0002` e
+  `0003` promovidas de `proposals/` para `database/`; risco de contrato
+  fechado editável via API direta **confirmado experimentalmente** e
+  documentado como R10 em `00-gestao/riscos.md` (não corrigido — fora do
+  escopo do gate); lint/build limpos; nenhum secret no diff. Fixture de
+  teste removida ao final.
 
 ## Em andamento
 
-- Nenhuma tarefa em andamento — MVP completo validado, aguardando
-  revisão do relatório final e autorização explícita de push
+- Nenhuma tarefa em andamento — MVP completo validado (incluindo gate
+  final de regressão), aguardando autorização explícita de push
 
 ## Próxima tarefa
 
@@ -79,8 +88,10 @@ Em andamento — validação final concluída, aguardando autorização de push
   `<LogoutButton />` manualmente; portal do cliente não implementado
   (decisão pendente de aprovação)
 - Imutabilidade de contrato fechado só reforçada na aplicação, não por
-  trigger de banco (diferente de `empresa_id`) — risco baixo, melhoria
-  futura recomendada
+  trigger de banco (diferente de `empresa_id`) — **confirmado
+  experimentalmente no gate final** (não mais suposição), registrado
+  como risco R10 em `00-gestao/riscos.md`; melhoria futura recomendada
+  (trigger de banco análogo a `fn_empresa_id_immutable`)
 
 ## Riscos
 

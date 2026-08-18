@@ -93,3 +93,31 @@ Dados fictícios de teste permanecem no banco (tenant "Empresa B — Teste"
 + 5 usuários + registros de negócio de teste) — considerar limpá-los
 antes de qualquer demonstração real para o cliente Betel, ou mantê-los
 como fixture permanente de teste (decisão do usuário).
+
+## ✅ REEXECUTADO no gate final do MVP — 2026-08-18
+
+Antes de autorizar o push dos 5 commits do MVP completo (cadastros →
+contratos → tarefas → dashboard), a suíte foi rodada de novo do zero, de
+verdade (não por inferência), para confirmar que nenhuma regressão foi
+introduzida pelos módulos novos:
+
+- Fixture recriada: 5 contas novas via Admin API (as anteriores já
+  tinham sido removidas na limpeza da fase de cadastros), seed rodado via
+  `database/fixtures/seed-tenant-isolation.sql` adaptado (mais 1 cliente/
+  evento/contrato/tarefa fictícios dentro da própria Betel, para os
+  checks T1/T3/T17 do Grupo 1/4 que comparam dentro do mesmo tenant).
+- 6 logins reais (admin Betel, sócio Betel, cliente Betel, admin/sócio/
+  cliente Empresa B), 29 requisições reais via API REST (os 27 casos
+  desta matriz, com os 6 testes do Grupo 4 contando 2 sub-checks cada,
+  mais os 2 checks do T14 da matriz de MVP —
+  `06-testes-evidencias/matriz-de-testes-mvp.md`).
+- **Resultado: 29/29 passaram.** Nenhuma falha, nenhuma correção
+  necessária.
+- Fixture removida ao final: `historico_tarefa`/`tarefa_evento`/
+  `contrato_servico`/`contrato`/`evento`/`cliente`/`tarefa_padrao`/
+  `checklist_modelo`/`servico`/`usuario` da Empresa B + os registros
+  extras dentro da Betel + a própria `Empresa B — Teste`, via SQL direto
+  (histórico é append-only, nem admin apaga via API normal — usado o SQL
+  Editor com role `postgres`, mesmo padrão da limpeza anterior). As 5
+  contas Auth deletadas via Admin API. Validado que só o admin real
+  (`joaopedriix@gmail.com`) restou na Betel.

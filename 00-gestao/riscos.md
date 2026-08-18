@@ -240,6 +240,29 @@ mostra tarefa interna.
   `historico_tarefa` (contém trocas de responsável/observações internas); se
   for exibir algo, filtrar só eventos do tipo público e tarefas visíveis.
 
+## R10 — Contrato fechado é editável via API direta (bypass da aplicação)
+
+**Confirmado experimentalmente em 2026-08-18** (gate final do MVP), não
+apenas por leitura de código: com um contrato já `fechado`, um `DELETE`
+em `contrato_servico` e um `PATCH` de `status` de volta para `rascunho`
+via API REST direta (mesmo JWT de admin, sem passar pela Server Action
+`atualizarServicosContrato`/tela de edição) **funcionaram** (HTTP 204 e
+200, respectivamente). A policy `contrato_admin_all`/`contrato_servico_admin_all`
+só checa `is_admin_of(empresa_id)` — não checa `status`.
+
+- **Pela interface/Server Actions da aplicação:** bloqueado corretamente
+  (`/contratos/[id]/editar` redireciona se `status = 'fechado'`;
+  `atualizarServicosContrato` retorna erro se chamada mesmo assim).
+- **Fora da aplicação** (um admin usando a API diretamente, ex. Postman/curl
+  com o próprio token): consegue reverter um contrato fechado. Quem faria
+  isso já é admin com acesso total ao sistema — não é uma escalação de
+  privilégio para um perfil menos privilegiado, mas quebra a garantia de
+  integridade "contrato fechado é imutável".
+- **Mitigação recomendada (não aplicada nesta fase):** trigger de banco
+  análogo a `fn_empresa_id_immutable`, bloqueando `UPDATE`/`DELETE` em
+  `contrato`/`contrato_servico` quando `status = 'fechado'` (exceto o
+  próprio `fechar_contrato()`, que só faz UPDATE de rascunho→fechado).
+
 ---
 
 ## Resumo de severidade
@@ -255,6 +278,7 @@ mostra tarefa interna.
 | R7 | Resquício de policy `anon` da visualização pública | Médio | Não |
 | R8 | Cascade delete apaga audit trail / DELETE não-admin | Médio | Não |
 | R9 | Vínculo `cliente↔usuario` frouxo e `AND visivel_ao_cliente` | Médio | Não |
+| R10 | Contrato fechado editável via API direta (só bloqueado na aplicação) | Médio | Não |
 
 \* Não bloqueia iniciar, mas **é obrigatório** antes de expor o sistema a
 usuários reais — R5/R6 são as escaladas de coluna e de máquina de estados.
