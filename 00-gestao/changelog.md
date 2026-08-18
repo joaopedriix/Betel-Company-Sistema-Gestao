@@ -277,8 +277,9 @@ já cobria as 6 tabelas usadas); única migration nova é a função aditiva
 com prazo calculado a partir da data do evento. Idempotente por design
 (`SELECT ... FOR UPDATE` trava a linha do contrato durante a transação) —
 testado chamando a RPC duas vezes no mesmo contrato: não duplicou
-**Resultado dos testes:** lint 0 erros; build OK (28 rotas, TypeScript
-sem erros); fluxo E2E completo testado no navegador com dados reais
+**Resultado dos testes:** lint 0 erros; build OK (29 rotas — contagem
+exata via `grep -c` na saída do build, incluindo `/` e `/_not-found` —,
+TypeScript sem erros); fluxo E2E completo testado no navegador com dados reais
 (cliente → serviço+checklist → evento → contrato → fechamento → tarefa
 gerada com prazo correto → sócio conclui a tarefa → dashboard mostra
 progresso 100%); testes de segurança via API (sócio bloqueado de reabrir
