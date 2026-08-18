@@ -4,17 +4,20 @@
 
 MVP funcional completo (fluxo principal ponta a ponta): autenticação,
 cadastros base, contratos, eventos, checklist automático, tarefas,
-progresso, dashboard e navegação — todos implementados e validados com
-dados reais. Migration do onboarding guiado aplicada; UI ainda não
-implementada. Sistema hoje só existe rodando em ambiente de
-desenvolvimento (Codespace) — **ainda não está em condições de uso pelo
-cliente real**; ver "Pendências para entrega ao cliente" abaixo.
+progresso, dashboard, navegação, onboarding guiado, agenda, visão
+agregada de tarefas/checklists e área de negócio — todos implementados.
+Os 4 riscos de segurança pendentes na última auditoria (R7, R8, R9, R10)
+foram reavaliados: R7 e R10 corrigidos e aplicados contra o Supabase
+real, R8 não era um problema real, R9 confirmado mas adiado por decisão
+de produto. Sistema hoje só existe rodando em ambiente de desenvolvimento
+(Codespace) — **ainda não está em condições de uso pelo cliente real**;
+ver "Pendências para entrega ao cliente" abaixo.
 
 ## Status
 
-Em andamento — MVP funcional pronto, mas com pendências de
-infraestrutura/segurança/produto antes de poder ser usado pelo cliente
-real (não é só "aguardando push")
+Em andamento — MVP funcional pronto, riscos de segurança conhecidos
+tratados, mas ainda com pendências de infraestrutura/produto antes de
+poder ser usado pelo cliente real (não é só "aguardando push")
 
 ## Concluído
 
@@ -62,33 +65,67 @@ real (não é só "aguardando push")
   `tarefa_padrao`) executado de verdade — passou; migrations `0002` e
   `0003` promovidas de `proposals/` para `database/`; risco de contrato
   fechado editável via API direta **confirmado experimentalmente** e
-  documentado como R10 em `00-gestao/riscos.md` (não corrigido — fora do
-  escopo do gate); lint/build limpos; nenhum secret no diff. Fixture de
-  teste removida ao final.
+  documentado como R10 em `00-gestao/riscos.md` nesse momento (corrigido
+  logo em seguida, ver abaixo); lint/build limpos; nenhum secret no diff.
+  Fixture de teste removida ao final.
+- **Menu de navegação lateral** (2026-08-18): `Sidebar` no layout raiz,
+  grupos colapsáveis (Cadastros, Eventos) com seta que gira ao abrir,
+  drawer mobile, `LogoutButton` centralizado no rodapé.
+- **R10 corrigido** (2026-08-18): migration
+  `0005_contrato_fechado_immutable.sql` aplicada contra o Supabase real
+  (autorização explícita do usuário). Dois triggers de guarda
+  (`fn_contrato_fechado_immutable`, `fn_contrato_servico_fechado_immutable`)
+  bloqueiam UPDATE/DELETE em `contrato`/`contrato_servico` quando o
+  contrato já está `fechado`, fechando o bypass via API confirmado no
+  gate final. Testado com fixture 100% transacional (6 cenários,
+  `ROLLBACK` no final, zero dados de teste persistidos). Detalhe em
+  `00-gestao/riscos.md` (R10) e `00-gestao/registro-de-bugs.md`.
+- **Auditoria R5–R9 contra o schema real** (2026-08-18): R5/R6 já
+  mitigados por `fn_tarefa_evento_guard` (confirmado no banco). R8 não é
+  um problema real — a FK de `historico_tarefa` usa `ON DELETE RESTRICT`,
+  não `CASCADE`. R7 confirmado e **corrigido**: `anon` tinha GRANT
+  residual de `TRUNCATE`/`TRIGGER`/`REFERENCES` em todas as 11 tabelas de
+  negócio (nunca SELECT/INSERT/UPDATE/DELETE, risco prático baixo, mas
+  violava least-privilege); migration `0006_revoke_anon_residual_grants.sql`
+  aplicada contra o Supabase real, zero grants residuais confirmados
+  depois. R9 confirmado (`cliente.usuario_id` sem constraint
+  cross-tenant), mas correção **adiada intencionalmente**: campo não é
+  usado por nenhuma tela ainda (`portal-cliente` é stub). Ver
+  `00-gestao/riscos.md` e `00-gestao/registro-de-bugs.md`.
+- **Onboarding guiado implementado** (2026-08-18): `OnboardingProvider` +
+  `OnboardingTour` por perfil (admin/sócio), persistência via Server
+  Action nas colunas da migration `0004`, botão "Refazer dicas" na
+  sidebar. Segundo o commit, testado ponta a ponta (abre no primeiro
+  acesso, avança/volta/pula, persiste conclusão, não reabre sozinho) —
+  **essa validação ainda não foi confirmada nesta sessão com evidência
+  direta no navegador**, só por inspeção do código e da mensagem do
+  commit (ver pendência de verificação abaixo).
+- **Menu de navegação expandido + área de negócio** (2026-08-18):
+  páginas `/agenda` (calendário diário/mensal/anual), `/tarefas` (visão
+  agregada de todas as tarefas, diferente de `/minhas-tarefas`) e
+  `/checklists` (hub por serviço); campo "área de negócio" no evento
+  (Betel Noivas/Eventos/Decorações/Estúdio) via migration
+  `0007_evento_area.sql`, com cor por área na agenda e link de WhatsApp
+  do cliente. Migrations `0005`/`0006`/`0007` todas aplicadas contra
+  produção nesta sessão, cada uma com autorização explícita do usuário.
 
 ## Em andamento
 
-- Menu de navegação lateral (2026-08-18): `Sidebar` no layout raiz,
-  grupos colapsáveis (Cadastros, Eventos) com seta que gira ao abrir,
-  drawer mobile, `LogoutButton` centralizado no rodapé. Lint/build
-  limpos, testado visualmente em desktop (drawer mobile não pôde ser
-  verificado visualmente por limitação da ferramenta de automação, mas
-  usa breakpoint Tailwind padrão já validado no projeto). Commitado
-  localmente, sem push.
-- Onboarding guiado — migration `0004_onboarding.sql` aprovada pelo
-  usuário e **aplicada contra o Supabase real** em 2026-08-18 (3 colunas
-  em `usuario`, 1 policy, 1 trigger de guarda `fn_usuario_self_update_guard`
-  — validados diretamente no schema, teste de fumaça de login sem
-  regressão). Commitada localmente. **UI/Server Actions/`OnboardingProvider`
-  ainda não implementados** — só a base de dados está pronta.
+- Verificação com evidência real (navegador) do onboarding, da navegação
+  nova (agenda/tarefas/checklists) e da área de negócio — implementados
+  e commitados localmente, mas ainda não validados nesta sessão além da
+  leitura do código e da mensagem de commit.
 
 ## Próxima tarefa
 
 - Ordem da Fase 5 (uma por vez): ~~autenticação~~ ~~cadastros base~~
   ~~contratos~~ ~~eventos~~ ~~checklist automático~~ ~~minhas tarefas~~
-  ~~progresso~~ ~~dashboard~~ ~~layout/navegação compartilhado~~ —
-  **todos concluídos**. Ver "Pendências para entrega ao cliente" abaixo
-  para o que falta antes do MVP poder ser usado de verdade.
+  ~~progresso~~ ~~dashboard~~ ~~layout/navegação compartilhado~~
+  ~~onboarding guiado~~ ~~agenda/tarefas agregadas/checklists~~ — **todos
+  concluídos**. Ver "Pendências para entrega ao cliente" abaixo para o
+  que falta antes do MVP poder ser usado de verdade: validação real no
+  navegador, testes automatizados, migrations do zero, backup, staging,
+  dados de demonstração e material para o cliente.
 
 ## Pendências para entrega ao cliente (uso real)
 
@@ -114,28 +151,22 @@ real (não é só "aguardando push")
    antes do go-live).
 
 **Bloqueante — segurança, antes de dados reais de cliente trafegarem:**
-5. Risco **R10** (`00-gestao/riscos.md`) — contrato fechado é editável
-   via API direta (bypass da aplicação); confirmado experimentalmente,
-   não corrigido. Mitigação recomendada: trigger de banco análogo a
-   `fn_empresa_id_immutable`, bloqueando UPDATE/DELETE em
-   `contrato`/`contrato_servico` quando `status = 'fechado'`.
-6. Riscos **R7–R9** do parecer de segurança original
-   (`00-gestao/riscos.md`) — resquício de policy `anon`, cascade delete
-   em `historico_tarefa`, vínculo `cliente↔usuario` frouxo. Esses três
-   nunca foram reverificados contra o schema real implementado (o
-   parecer é da Fase 4, anterior à implementação); precisam de uma
-   auditoria pontual antes do go-live. **R5 e R6 já parecem mitigados**
-   na prática via `fn_tarefa_evento_guard` (confirmado: trigger existe
-   no banco e bloqueia sócio de reabrir tarefa concluída), mas a tabela
-   de riscos ainda não foi atualizada para refletir isso.
-7. Senha do admin exposta nesta sessão (`Tochapado123@`) foi mantida a
-   pedido do usuário (fluxo de recuperação por e-mail estava falhando)
-   — recomenda-se trocá-la assim que o fluxo de recuperação for
-   corrigido, antes do go-live.
+5. ~~Risco R10 (contrato fechado editável via API direta)~~ — **corrigido
+   em 2026-08-18**, ver acima e `00-gestao/riscos.md`.
+6. ~~Riscos R7–R9~~ — **auditados em 2026-08-18** contra o schema real:
+   R7 corrigido, R8 não era um problema real, R9 confirmado e
+   formalmente adiado (registrado em `00-gestao/riscos.md`, sem risco
+   prático hoje porque o campo não é usado por nenhuma tela).
+7. Senha do admin exposta em sessão anterior (`Tochapado123@`) — status
+   de troca não confirmado nesta sessão; recomenda-se validar que foi
+   trocada (ou trocar agora) e que o fluxo de recuperação por e-mail
+   está funcionando, antes do go-live.
 
 **Importante, mas não bloqueia o primeiro acesso:**
-8. Onboarding guiado — banco pronto (migration aplicada), falta toda a
-   UI (`OnboardingProvider`/`OnboardingTour`/Server Actions).
+8. ~~Onboarding guiado — falta UI~~ — **implementado em 2026-08-18**
+   (`OnboardingProvider`/`OnboardingTour`/Server Actions/"Refazer
+   dicas"); falta validação com evidência real no navegador (ver "Em
+   andamento" acima).
 9. Portal do cliente — não implementado; decisão pendente sobre entrar
    nesta versão ou ficar para depois (ver "Decisões aguardando
    aprovação" abaixo).
@@ -144,9 +175,8 @@ real (não é só "aguardando push")
     ad-hoc. Sem CI. Risco de regressão silenciosa em mudanças futuras.
 11. Zero backups formais — `07-backups/` só tem `.gitkeep`; nenhum
     snapshot do banco foi salvo antes das migrations aplicadas.
-12. Menu mobile (drawer) não testado visualmente nesta sessão (só por
-    leitura de código/CSS) — vale um teste manual num celular real
-    antes do go-live.
+12. Menu mobile (drawer) não testado visualmente em navegador real —
+    vale um teste manual num celular real antes do go-live.
 
 **Decisão de produto, não técnica (fora do controle desta sessão):**
 13. Nome oficial do produto e identidade visual — em aberto desde a
@@ -158,27 +188,16 @@ real (não é só "aguardando push")
     para não ser esquecido se entrar em uso real.
 
 - Ver `00-gestao/pendencias.md` para o detalhamento de cada item acima
-- ~~Promover `0002_multitenant.sql` e `0003_fechar_contrato.sql` para
-  `database/`~~ — feito no gate final de 2026-08-18 (`git mv`, histórico
-  preservado); ambas agora em `03-projeto-betel/database/`, fora de
-  `proposals/`
 - Nenhuma migration testada do zero em ambiente efêmero (só análise
   estática + execução real contra produção) — sem risco real hoje, mas
   registrar para quando houver ambiente de CI/staging
-- ~~Não existe layout/navegação compartilhado~~ — feito em 2026-08-18:
-  `Sidebar` único no layout raiz (`src/components/layout/sidebar.tsx`),
-  config de itens por perfil em `src/lib/layout/nav-config.ts`,
-  `<LogoutButton />` removido das páginas individuais
 - Portal do cliente não implementado (decisão pendente de aprovação)
-- Imutabilidade de contrato fechado só reforçada na aplicação, não por
-  trigger de banco (diferente de `empresa_id`) — **confirmado
-  experimentalmente no gate final** (não mais suposição), registrado
-  como risco R10 em `00-gestao/riscos.md`; melhoria futura recomendada
-  (trigger de banco análogo a `fn_empresa_id_immutable`)
 
 ## Riscos
 
-- Ver `00-gestao/riscos.md` e `04-analises/auditoria-mvp.md` seção 16
+- Ver `00-gestao/riscos.md` (tabela de severidade no final, todos os 10
+  riscos R1–R10 com status atualizado) e `04-analises/auditoria-mvp.md`
+  seção 16
 - O bug de recursão de RLS (evento↔tarefa_evento) está latente também no
   `policies.sql` original (pré-multitenant) — só corrigido dentro de
   `0002_multitenant.sql`. Sem impacto hoje, mas relevante se
@@ -193,5 +212,7 @@ real (não é só "aguardando push")
 
 ## Última atualização
 
-2026-08-18 (migration de onboarding aplicada; levantamento completo de
-pendências para entrega ao cliente)
+2026-08-18 (reconciliado com o histórico real do git: R10 e R7
+corrigidos, R8/R9 auditados, onboarding guiado e navegação expandida
+implementados — este arquivo estava desatualizado em relação a esses
+commits)
