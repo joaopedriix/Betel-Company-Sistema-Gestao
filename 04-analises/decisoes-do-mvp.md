@@ -85,7 +85,7 @@ foi necessária: schema e as 23 policies multitenant já cobriam `evento`,
 `contrato`, `contrato_servico`, `tarefa_evento`, `checklist_modelo` e
 `tarefa_padrao` desde a migration da Fase 6. Única migration nova: a
 função `public.fechar_contrato(uuid)`
-(`03-projeto-betel/database/proposals/0003_fechar_contrato.sql`),
+(`03-projeto-betel/database/0003_fechar_contrato.sql`),
 puramente aditiva, `SECURITY INVOKER` (roda com a identidade de quem
 chama — RLS decide, nenhum privilégio novo concedido).
 

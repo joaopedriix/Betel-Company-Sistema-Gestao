@@ -68,10 +68,10 @@ Em andamento — validação final concluída, aguardando autorização de push
 ## Pendências
 
 - Ver `00-gestao/pendencias.md`
-- Promover `03-projeto-betel/database/proposals/0002_multitenant.sql` e
-  `0003_fechar_contrato.sql` para `database/` (hoje o schema real já
-  reflete as duas migrations; os arquivos formais ainda estão na pasta
-  de proposta)
+- ~~Promover `0002_multitenant.sql` e `0003_fechar_contrato.sql` para
+  `database/`~~ — feito no gate final de 2026-08-18 (`git mv`, histórico
+  preservado); ambas agora em `03-projeto-betel/database/`, fora de
+  `proposals/`
 - Nenhuma migration testada do zero em ambiente efêmero (só análise
   estática + execução real contra produção) — sem risco real hoje, mas
   registrar para quando houver ambiente de CI/staging

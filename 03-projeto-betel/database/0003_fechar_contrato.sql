@@ -3,6 +3,12 @@
 -- Migration: função fechar_contrato() — geração automática de tarefas
 -- =====================================================================
 --
+-- DEPENDÊNCIA: requer 0002_multitenant.sql já aplicada (usa empresa_id
+-- em contrato/evento/tarefa_evento/tarefa_padrao/checklist_modelo e as
+-- policies is_admin_of() criadas naquela migration). Ordem de execução
+-- em instalação nova: schema.sql, policies.sql, grants.sql,
+-- 0002_multitenant.sql, 0003_fechar_contrato.sql (nesta ordem).
+--
 -- Puramente aditiva: cria só uma função nova (public.fechar_contrato).
 -- Não altera nenhuma tabela, coluna, policy ou dado existente.
 --
