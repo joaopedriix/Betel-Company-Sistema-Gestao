@@ -54,6 +54,7 @@ export async function criarServico(
   if (error) return { erroGeral: ERRO_GENERICO };
 
   revalidatePath("/servicos");
+  revalidatePath("/checklists");
   redirect("/servicos");
 }
 
@@ -95,6 +96,7 @@ export async function atualizarServico(
 
   revalidatePath("/servicos");
   revalidatePath(`/servicos/${id}`);
+  revalidatePath("/checklists");
   redirect(`/servicos/${id}`);
 }
 
@@ -107,4 +109,5 @@ export async function alternarAtivoServico(id: string, ativoAtual: boolean) {
 
   revalidatePath("/servicos");
   revalidatePath(`/servicos/${id}`);
+  revalidatePath("/checklists");
 }

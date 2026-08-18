@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // O indicador de dev do Next.js fica fixo no canto inferior esquerdo por
+  // padrão, colidindo com o botão "Sair" da sidebar (que também fica lá).
+  // Só aparece em dev -- não afeta produção.
+  devIndicators: {
+    position: "bottom-right",
+  },
   // Só em dev: permite testar via o túnel de preview do GitHub
   // Codespaces. O proxy de port-forwarding do Codespaces repassa a
   // requisição para localhost:3000 reescrevendo o header Origin (mas

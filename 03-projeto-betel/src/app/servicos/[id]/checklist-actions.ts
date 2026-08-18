@@ -52,6 +52,7 @@ export async function criarChecklistModelo(servicoId: string) {
   });
 
   revalidatePath(`/servicos/${servicoId}`);
+  revalidatePath("/checklists");
 }
 
 export async function criarTarefaPadrao(
@@ -85,6 +86,7 @@ export async function criarTarefaPadrao(
   if (error) return { erroGeral: ERRO_GENERICO };
 
   revalidatePath(`/servicos/${servicoId}`);
+  revalidatePath("/checklists");
   redirect(`/servicos/${servicoId}`);
 }
 
@@ -123,6 +125,7 @@ export async function atualizarTarefaPadrao(
   }
 
   revalidatePath(`/servicos/${servicoId}`);
+  revalidatePath("/checklists");
   redirect(`/servicos/${servicoId}`);
 }
 
@@ -138,4 +141,5 @@ export async function alternarAtivoTarefaPadrao(
   await supabase.from("tarefa_padrao").update({ ativo: !ativoAtual }).eq("id", id);
 
   revalidatePath(`/servicos/${servicoId}`);
+  revalidatePath("/checklists");
 }
