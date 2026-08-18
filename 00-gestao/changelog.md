@@ -288,3 +288,26 @@ capturada); nenhum bug de aplicação encontrado nesta fase (só um ajuste
 de config do ESLint, ver `00-gestao/registro-de-bugs.md`); dados
 fictícios removidos ao final, Betel validada como intacta (só o admin
 real permanece)
+
+**Alteração:** feat: menu de navegação lateral (sidebar)
+**Arquivos:** `src/components/layout/sidebar.tsx`, `src/lib/layout/nav-config.ts`,
+`src/app/layout.tsx`, `src/app/dashboard/page.tsx`, `src/app/minhas-tarefas/page.tsx`
+**Motivo:** até aqui não havia navegação compartilhada entre módulos — cada
+página tinha `<LogoutButton />` manual e nenhum link visível entre
+Cadastros/Eventos/Contratos, deixando o sistema navegável só por URL direta
+**Arquitetura:** ponto único de inserção no layout raiz — `getUsuarioAtual()`
+resolvido uma vez em `RootLayout` (agora `async`), sidebar só renderiza se
+houver sessão (exclui `/login` sem checar pathname); itens de navegação por
+perfil centralizados em `NAV_BY_PERFIL` (`nav-config.ts`), reaproveitando o
+tipo `Perfil` já existente; grupos colapsáveis (Cadastros, Eventos) com seta
+que gira ao abrir/fechar e abrem sozinhos se a rota ativa estiver dentro do
+grupo; `LogoutButton` centralizado no rodapé da sidebar, removido das páginas
+individuais
+**Resultado dos testes:** lint 0 erros; build OK (29 rotas, TypeScript sem
+erros); testado no navegador logado como admin — sidebar renderiza em
+`/dashboard`, grupos "Cadastros" e "Eventos" expandem via clique na seta,
+navegação para `/clientes` funciona e destaca o item ativo, logout continua
+funcional a partir do rodapé; menu mobile (drawer) não pôde ser verificado
+visualmente por limitação da ferramenta de automação de navegador nesta
+sessão, mas usa o mesmo padrão de breakpoint Tailwind (`md:hidden`/`md:flex`)
+já validado em outras telas do projeto

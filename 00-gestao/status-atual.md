@@ -63,16 +63,21 @@ Em andamento — validação final concluída, aguardando autorização de push
 
 ## Em andamento
 
-- Nenhuma tarefa em andamento — MVP completo validado (incluindo gate
-  final de regressão), aguardando autorização explícita de push
+- Menu de navegação lateral implementado (2026-08-18): `Sidebar` no
+  layout raiz, grupos colapsáveis (Cadastros, Eventos) com seta que
+  gira ao abrir, drawer mobile, `LogoutButton` centralizado no rodapé.
+  Lint/build limpos, testado visualmente em desktop. Aguardando commit
+  local (sem push). Onboarding guiado (`0004_onboarding.sql`) segue
+  pausado aguardando aprovação explícita do usuário.
 
 ## Próxima tarefa
 
 - Ordem da Fase 5 (uma por vez): ~~autenticação~~ ~~cadastros base~~
   ~~contratos~~ ~~eventos~~ ~~checklist automático~~ ~~minhas tarefas~~
-  ~~progresso~~ ~~dashboard~~ — **todos concluídos**. Próximos passos
-  possíveis (fora do escopo autorizado até aqui): layout/navegação
-  compartilhado, portal do cliente, refinamentos de UX.
+  ~~progresso~~ ~~dashboard~~ ~~layout/navegação compartilhado~~ —
+  **todos concluídos**. Próximos passos possíveis (fora do escopo
+  autorizado até aqui): onboarding guiado (migration pendente de
+  aprovação), portal do cliente, refinamentos de UX.
 
 ## Pendências
 
@@ -84,9 +89,11 @@ Em andamento — validação final concluída, aguardando autorização de push
 - Nenhuma migration testada do zero em ambiente efêmero (só análise
   estática + execução real contra produção) — sem risco real hoje, mas
   registrar para quando houver ambiente de CI/staging
-- Não existe layout/navegação compartilhado — cada página inclui
-  `<LogoutButton />` manualmente; portal do cliente não implementado
-  (decisão pendente de aprovação)
+- ~~Não existe layout/navegação compartilhado~~ — feito em 2026-08-18:
+  `Sidebar` único no layout raiz (`src/components/layout/sidebar.tsx`),
+  config de itens por perfil em `src/lib/layout/nav-config.ts`,
+  `<LogoutButton />` removido das páginas individuais
+- Portal do cliente não implementado (decisão pendente de aprovação)
 - Imutabilidade de contrato fechado só reforçada na aplicação, não por
   trigger de banco (diferente de `empresa_id`) — **confirmado
   experimentalmente no gate final** (não mais suposição), registrado

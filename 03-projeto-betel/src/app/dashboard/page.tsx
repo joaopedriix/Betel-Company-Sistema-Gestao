@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { LogoutButton } from "@/components/logout-button";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
@@ -50,10 +49,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-6 sm:p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <LogoutButton />
-      </div>
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Indicador label="Contratos em rascunho" valor={contratosAbertos ?? 0} />

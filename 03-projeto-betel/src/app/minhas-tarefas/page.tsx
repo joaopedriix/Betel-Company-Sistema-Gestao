@@ -1,7 +1,6 @@
 import { concluirTarefa, reabrirTarefa } from "./actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LogoutButton } from "@/components/logout-button";
 import { getUsuarioAtual } from "@/lib/auth/usuario-atual";
 import { createClient } from "@/lib/supabase/server";
 
@@ -45,10 +44,7 @@ export default async function MinhasTarefasPage() {
 
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-6 p-6 sm:p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Minhas tarefas</h1>
-        <LogoutButton />
-      </div>
+      <h1 className="text-2xl font-semibold">Minhas tarefas</h1>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">Pendentes ({pendentes.length})</h2>

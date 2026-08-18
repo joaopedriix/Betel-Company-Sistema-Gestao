@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { Sidebar } from "@/components/layout/sidebar";
+import { getUsuarioAtual } from "@/lib/auth/usuario-atual";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -10,12 +12,26 @@ export const metadata: Metadata = {
   description: "Sistema de gestão de eventos, agenda e checklists do grupo Betel.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Resolvido uma única vez aqui (nunca por página) — se não há usuário
+  // logado (ex.: tela de /login), a barra lateral simplesmente não
+  // aparece, sem precisar checar o pathname.
+  const usuario = await getUsuarioAtual();
+
   return (
     <html lang="pt-BR" className={cn("font-sans", geist.variable)}>
-      <body>{children}</body>
+      <body>
+        {usuario ? (
+          <div className="flex min-h-screen flex-col md:flex-row">
+            <Sidebar perfil={usuario.perfil} nome={usuario.nome} />
+            <div className="flex-1">{children}</div>
+          </div>
+        ) : (
+          children
+        )}
+      </body>
     </html>
   );
 }
