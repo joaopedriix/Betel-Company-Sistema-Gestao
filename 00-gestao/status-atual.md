@@ -2,13 +2,14 @@
 
 ## Fase atual
 
-Fase 5, cadastros base (clientes, sócios/usuários, serviços) —
-implementados e validados (funcional + segurança). Próxima etapa:
-contratos.
+MVP funcional completo (fluxo principal ponta a ponta): autenticação,
+cadastros base, contratos, eventos, checklist automático, tarefas,
+progresso e dashboard — todos implementados e validados com dados reais.
+Aguardando revisão e autorização de push.
 
 ## Status
 
-Em andamento
+Em andamento — validação final concluída, aguardando autorização de push
 
 ## Concluído
 
@@ -22,67 +23,78 @@ Em andamento
 - Fase 5, funcionalidade 1/7 — **Autenticação**: implementada e testada
   de ponta a ponta
 - Fase 6 — **Auditoria técnica e funcional completa** do MVP
-  (`04-analises/auditoria-mvp.md`): confirmou que só autenticação está
-  implementada, resto é stub; corrigidos `next lint` (removido no Next
+  (`04-analises/auditoria-mvp.md`): confirmou que só autenticação estava
+  implementada, resto era stub; corrigidos `next lint` (removido no Next
   16) e Node 20→22 (incompatível com `@supabase/*`)
 - Fase 6 — **Fundação multitenant aplicada** (`04-analises/arquitetura-multitenant.md`,
   `plano-migration-tenant.md`): tabela `empresa`, `empresa_id` em todas
   as 10 tabelas, RLS reescrito com `is_admin_of()` + trigger de
   imutabilidade, Betel como primeiro tenant. Migration executada e
-  validada em 2026-08-17 — ver `00-gestao/changelog.md`
+  validada em 2026-08-17
 - Fase 6 — **27/27 testes de isolamento passaram** (2 bugs reais
   pré-existentes da Fase 4 achados e corrigidos: `fn_log_tarefa_evento`
   sem `empresa_id`, recursão de RLS evento↔tarefa_evento); dados
   fictícios de teste limpos depois; fixture reproduzível criado em
   `03-projeto-betel/database/fixtures/`
 - Fase 5 — **Cadastros base (Clientes, Sócios/Usuários, Serviços)**
-  implementados e validados: funcional completo (CRUD, busca,
-  ativar/inativar, duplicidade) + segurança (RLS via API com JWT real de
-  sócio, bloqueio de rota por perfil, `empresa_id` sempre server-side e
-  imutável). Ver `04-analises/decisoes-do-mvp.md` e
-  `06-testes-evidencias/testes-manuais-cadastros.md`. Bug real de
-  infraestrutura encontrado e corrigido: CSRF de Server Actions via
-  proxy do Codespace reescrevendo `Origin` para `localhost:3000`.
+  implementados e validados: funcional completo + segurança (RLS via API
+  com JWT real de sócio, bloqueio de rota por perfil, `empresa_id`
+  sempre server-side e imutável). Bug real de infraestrutura corrigido:
+  CSRF de Server Actions via proxy do Codespace reescrevendo `Origin`.
+- **MVP completo (Contratos, Eventos, Checklist automático, Minhas
+  Tarefas, Progresso, Dashboard)** — implementado e validado com fluxo
+  E2E real (login → cadastros → checklist → evento → contrato →
+  fechamento → geração automática de tarefa → conclusão → progresso →
+  dashboard). Migration nova (aditiva): função `fechar_contrato()`,
+  idempotente sob concorrência (testado com chamada RPC repetida).
+  Nenhum bug de aplicação encontrado nesta fase. Ver
+  `04-analises/decisoes-do-mvp.md`,
+  `06-testes-evidencias/matriz-de-testes-mvp.md`,
+  `00-gestao/registro-de-bugs.md`.
 
 ## Em andamento
 
-- Nenhuma tarefa em andamento — cadastros base validados, aguardando
-  commit e autorização para a próxima etapa (contratos)
+- Nenhuma tarefa em andamento — MVP completo validado, aguardando
+  revisão do relatório final e autorização explícita de push
 
 ## Próxima tarefa
 
-- Ordem da Fase 5 (uma por vez, com teste antes de seguir): ~~autenticação~~
-  ~~cadastros base~~ (concluídos) → contratos → geração automática de
-  checklist → "Minhas tarefas" → conclusão/checklist automático →
-  dashboard do gestor
+- Ordem da Fase 5 (uma por vez): ~~autenticação~~ ~~cadastros base~~
+  ~~contratos~~ ~~eventos~~ ~~checklist automático~~ ~~minhas tarefas~~
+  ~~progresso~~ ~~dashboard~~ — **todos concluídos**. Próximos passos
+  possíveis (fora do escopo autorizado até aqui): layout/navegação
+  compartilhado, portal do cliente, refinamentos de UX.
 
 ## Pendências
 
 - Ver `00-gestao/pendencias.md`
-- Promover `03-projeto-betel/database/proposals/0002_multitenant.sql`
-  para `database/` (hoje o schema real já reflete a migration, incluindo
-  os 2 hotfixes; o arquivo formal ainda está na pasta de proposta)
-- Nenhuma migration não testada do zero em ambiente efêmero (só análise
-  estática) — sem risco real hoje (já validada contra o banco real), mas
+- Promover `03-projeto-betel/database/proposals/0002_multitenant.sql` e
+  `0003_fechar_contrato.sql` para `database/` (hoje o schema real já
+  reflete as duas migrations; os arquivos formais ainda estão na pasta
+  de proposta)
+- Nenhuma migration testada do zero em ambiente efêmero (só análise
+  estática + execução real contra produção) — sem risco real hoje, mas
   registrar para quando houver ambiente de CI/staging
-- Não montar em nenhuma tela real: portal do cliente, layout/navegação
-  completos (só um botão "Sair" mínimo foi adicionado em `/dashboard` e
-  `/minhas-tarefas` para viabilizar os testes de troca de sessão)
+- Não existe layout/navegação compartilhado — cada página inclui
+  `<LogoutButton />` manualmente; portal do cliente não implementado
+  (decisão pendente de aprovação)
+- Imutabilidade de contrato fechado só reforçada na aplicação, não por
+  trigger de banco (diferente de `empresa_id`) — risco baixo, melhoria
+  futura recomendada
 
 ## Riscos
 
 - Ver `00-gestao/riscos.md` e `04-analises/auditoria-mvp.md` seção 16
 - O bug de recursão de RLS (evento↔tarefa_evento) está latente também no
   `policies.sql` original (pré-multitenant) — só corrigido dentro de
-  `0002_multitenant.sql`. Sem impacto hoje (a migration já foi aplicada),
-  mas relevante se `policies.sql` for reaplicado isoladamente no futuro
+  `0002_multitenant.sql`. Sem impacto hoje, mas relevante se
+  `policies.sql` for reaplicado isoladamente no futuro
 
 ## Decisões aguardando aprovação
 
 - Se o portal do cliente com login entra nesta primeira versão do MVP ou
   fica só como "visualização pública sem login"
-- Autorização para iniciar a próxima etapa (contratos) após revisão do
-  relatório dos cadastros base
+- Autorização explícita de push dos commits locais para o GitHub
 
 ## Última atualização
 

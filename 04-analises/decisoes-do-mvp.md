@@ -77,6 +77,53 @@ para o roteiro de testes executado.
   `experimental.serverActions.allowedOrigins` em `next.config.ts`,
   restrito a `NODE_ENV !== "production"`.
 
+## Contratos, Eventos, Checklist automático, Tarefas e Dashboard (2026-08-18)
+
+MVP funcional completo — fluxo principal ponta a ponta implementado e
+validado com dados reais (não simulados). Nenhuma migration de RLS/policy
+foi necessária: schema e as 23 policies multitenant já cobriam `evento`,
+`contrato`, `contrato_servico`, `tarefa_evento`, `checklist_modelo` e
+`tarefa_padrao` desde a migration da Fase 6. Única migration nova: a
+função `public.fechar_contrato(uuid)`
+(`03-projeto-betel/database/proposals/0003_fechar_contrato.sql`),
+puramente aditiva, `SECURITY INVOKER` (roda com a identidade de quem
+chama — RLS decide, nenhum privilégio novo concedido).
+
+- **Geração automática de tarefas:** ao fechar um contrato, para cada
+  serviço contratado, cada `tarefa_padrao` ativa do checklist daquele
+  serviço vira uma `tarefa_evento`, com `prazo = data_evento +
+  prazo_offset_dias`. **Idempotente por design:** `SELECT ... FOR UPDATE`
+  trava a linha do contrato durante a transação — uma segunda chamada
+  (duplo clique, requisição repetida) espera a primeira, vê
+  `status = 'fechado'` e não faz nada. Testado com chamada RPC repetida
+  diretamente: confirmado que não duplica.
+- **Contrato fechado é imutável na aplicação:** `/contratos/[id]/editar`
+  redireciona de volta ao detalhe se `status = 'fechado'` (checagem na
+  Server Action e na própria página). **Limitação registrada:** essa
+  imutabilidade não tem um trigger de banco reforçando (diferente de
+  `empresa_id`, que tem `fn_empresa_id_immutable`) — hoje só a camada de
+  aplicação impede a edição. Risco baixo (só admin chega lá de qualquer
+  forma), mas é uma melhoria futura recomendada se o modelo de permissões
+  mudar.
+- **Cálculo de progresso:** `tarefas concluídas / tarefas totais` do
+  evento. Casos extremos documentados: zero tarefas (contrato sem
+  checklist configurado nos serviços, ou ainda em rascunho) mostra
+  mensagem em vez de dividir por zero; não existe status "cancelada" no
+  enum `status_tarefa` (só pendente/em_andamento/concluida/bloqueada),
+  então não há caso de tarefa cancelada a excluir do cálculo; tarefas
+  reabertas voltam a contar como não concluídas (comportamento
+  intencional).
+- **Dashboard:** indicadores 100% reais via `count` do Postgres,
+  filtrados implicitamente por tenant via RLS — nenhuma consulta global.
+- **Atribuição de responsável:** adicionada na própria tela de detalhe do
+  evento (fora do escopo original do prompt de fechamento, mas necessária
+  — sem isso, a tarefa gerada não tem `responsavel_id` e o sócio nunca a
+  vê em "Minhas tarefas", a menos que `tarefa_padrao.responsavel_padrao_id`
+  já esteja configurado).
+- **Gap de infraestrutura, não corrigido nesta fase:** ainda não existe
+  layout/navegação compartilhado entre as telas — cada página precisa
+  incluir `<LogoutButton />` manualmente. Ver `00-gestao/pendencias.md`.
+
 ## Não decidido / não aplicável ainda
 
 - Domínio de produção.
