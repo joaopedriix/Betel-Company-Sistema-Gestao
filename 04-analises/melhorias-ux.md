@@ -16,15 +16,10 @@
    estão zerados (nenhum dado de negócio no tenant). Depende da Fase 8
    (dados de demonstração) para a demo fazer sentido visualmente — sem
    isso, a tela mais "vitrine" do sistema aparece vazia.
-2. **Inconsistência de tratamento de erro entre páginas [código]** —
-   `clientes`, `contratos`, `eventos` e `servicos` verificam o `error`
-   da query Supabase e mostram uma mensagem amigável
-   (`role="alert"`, "Não foi possível carregar..."). As páginas mais
-   novas (`dashboard`, `/tarefas`, `/minhas-tarefas`) **não checam
-   `error`** — se a query falhar, a tela mostra silenciosamente "0" ou
-   lista vazia, indistinguível de "não há dados de verdade". Numa
-   demonstração ao vivo, um erro de rede nessas telas passaria
-   despercebido em vez de mostrar um aviso claro.
+2. ~~Inconsistência de tratamento de erro entre páginas~~ — **corrigido
+   em 2026-08-18**: `dashboard`, `/tarefas` e `/minhas-tarefas` agora
+   seguem o mesmo padrão (`role="alert"`) já usado em
+   `clientes`/`contratos`/`eventos`/`servicos`.
 
 ## Necessário antes de produção (uso real)
 
@@ -36,17 +31,17 @@
    tratado em Server Component cai na tela de erro padrão do Next
    (não a marca do produto); uma URL inválida cai no 404 genérico do
    Next.
-4. **Aplicar o mesmo padrão de tratamento de erro** das páginas mais
-   antigas (`clientes`/`contratos`/`eventos`/`servicos`) em
-   `dashboard`, `/tarefas`, `/minhas-tarefas`, `/agenda`,
-   `/checklists` — ver item 2, mesma causa raiz.
-5. **Drawer mobile sem fechar com Escape e sem foco preso [código]** —
-   `Sidebar` (`components/layout/sidebar.tsx`): o drawer mobile fecha
-   ao clicar no overlay ou no X, mas não tem handler de `Escape` (o
-   tour de onboarding tem, o drawer não) nem prende o foco por teclado
-   dentro do menu aberto — tab pode escapar para elementos atrás do
-   overlay. Ainda não confirmado visualmente em viewport mobile real
-   (ver "Não validado ainda").
+4. ~~Aplicar o mesmo padrão de tratamento de erro~~ — feito junto com o
+   item 2 (`/agenda` e `/checklists` não fazem queries que possam falhar
+   do mesmo jeito — só leitura simples — então não precisavam do mesmo
+   tratamento).
+5. **Drawer mobile — Escape corrigido, foco ainda não preso [código]** —
+   `Sidebar` (`components/layout/sidebar.tsx`): ~~sem handler de
+   Escape~~ corrigido em 2026-08-19 (mesmo padrão do tour de
+   onboarding). Ainda falta prender o foco por teclado dentro do menu
+   aberto — tab pode escapar para elementos atrás do overlay. Não
+   confirmado visualmente em viewport mobile real (ver "Não validado
+   ainda").
 6. **Sócio não vê Agenda** — confirmado intencional
    (`NAV_BY_PERFIL.socio` só tem "Minhas tarefas"), mas vale
    reconfirmar com o usuário se é isso mesmo que ele quer: hoje o
