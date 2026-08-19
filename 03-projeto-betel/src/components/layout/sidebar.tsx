@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
@@ -94,14 +94,43 @@ export function Sidebar({ perfil, nome }: { perfil: Perfil; nome: string }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const entries = NAV_BY_PERFIL[perfil];
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const openButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!mobileOpen) return;
+
+    closeButtonRef.current?.focus();
+
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setMobileOpen(false);
+      if (e.key === "Escape") {
+        setMobileOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const container = drawerRef.current;
+      if (!container) return;
+      const focusables = container.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    const triggerButton = openButtonRef.current;
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      triggerButton?.focus();
+    };
   }, [mobileOpen]);
 
   const nav = (
@@ -119,6 +148,7 @@ export function Sidebar({ perfil, nome }: { perfil: Perfil; nome: string }) {
         <span className="text-sm font-semibold">Betel Company</span>
         <button
           type="button"
+          ref={openButtonRef}
           onClick={() => setMobileOpen(true)}
           aria-label="Abrir menu"
           className="rounded-lg p-2 hover:bg-accent/50"
@@ -129,17 +159,18 @@ export function Sidebar({ perfil, nome }: { perfil: Perfil; nome: string }) {
 
       {/* Overlay + menu deslizante em telas pequenas. */}
       {mobileOpen ? (
-        <div className="fixed inset-0 z-50 flex md:hidden">
+        <div className="fixed inset-0 z-50 flex md:hidden" role="dialog" aria-modal="true">
           <div
             className="fixed inset-0 bg-black/40"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
-          <div className="relative flex w-64 flex-col bg-background">
+          <div ref={drawerRef} className="relative flex w-64 flex-col bg-background">
             <div className="flex items-center justify-between border-b p-3">
               <span className="text-sm font-semibold">Betel Company</span>
               <button
                 type="button"
+                ref={closeButtonRef}
                 onClick={() => setMobileOpen(false)}
                 aria-label="Fechar menu"
                 className="rounded-lg p-2 hover:bg-accent/50"

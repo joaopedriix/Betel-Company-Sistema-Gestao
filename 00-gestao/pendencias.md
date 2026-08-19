@@ -1,5 +1,43 @@
 # Decisões pendentes (perguntas bloqueadoras)
 
+## [2026-08-19] — Consolidado: tudo que precisa de resposta do usuário agora
+
+> Seção única reunindo todas as decisões em aberto espalhadas pelo
+> documento (mantidas nas seções originais abaixo também, por
+> rastreabilidade). Nada aqui foi assumido como resposta padrão.
+
+1. **Autorizar API v1 em produção?** Validada de ponta a ponta em
+   staging; falta autorizar a migration `0009_api_keys.sql` + GRANTs
+   estreitos (`SELECT` em 3 tabelas) contra o Supabase real. Ver
+   `04-analises/integracao-api.md`.
+2. **Sócio deveria ver a Agenda?** Hoje só vê "Minhas tarefas". Aberto
+   desde 2026-08-18.
+3. **Portal do cliente entra nesta versão do MVP ou fica para depois?**
+   Hoje é um stub ("Em Construção").
+4. **Deploy real (Vercel) e domínio** — nenhuma decisão tomada; sistema
+   só existe hoje rodando em Codespace de desenvolvimento.
+5. **Autorização explícita de push** dos 33 commits locais para o
+   GitHub — nunca solicitada nem dada.
+6. **Nome oficial do produto e identidade visual** — em aberto desde a
+   Fase 2.
+7. **Se haverá clientes com mais de um evento** — o schema já assume
+   1:N (um cliente, vários eventos); confirmar se está correto.
+8. **Regras de cobrança/financeiro** e **política de anexos, retenção
+   de dados, LGPD, aprovação jurídica** — nenhum endereçado; ficam
+   relevantes assim que houver dado real de cliente trafegando.
+9. **Senha do admin exposta em sessão anterior** (`Tochapado123@`) —
+   status de troca não confirmado; recomenda-se validar/trocar antes
+   do go-live.
+10. **Executar a suíte completa de 27 testes de isolamento em
+    staging?** Fixture já existe (`database/fixtures/`), mas é um
+    trabalho grande (6 contas fictícias + 27 casos manuais com
+    múltiplos logins) — não executado nesta rodada por ser
+    desproporcional a uma tarefa de continuidade; sugiro sessão
+    dedicada.
+11. **Plano B — Supabase local via Docker**: em construção nesta
+    sessão (`supabase start` rodando), sem risco à sessão do Codespace.
+    Assim que pronto, será registrado aqui como resolvido.
+
 > Lista de perguntas que precisam ser respondidas antes de avançar em
 > funcionalidades, banco de dados definitivo ou integrações reais.
 
@@ -83,6 +121,19 @@ página, pra evitar que os valores aparecessem no transcript da
 conversa — proteção correta). Com essas duas chaves eu configuro o
 ambiente de teste e valido a integração via API e os testes de
 integração de ponta a ponta.
+
+## [2026-08-19] — Aberto: incidente externo do Supabase durante demo ao vivo
+
+Durante demonstração ao vivo ao cliente, login/autenticação ficou
+extremamente lento (100+s) por incidente ativo e público do Supabase
+("401 errors due to JWT rejections", `status.supabase.com`, aberto
+desde 14/08/2026). Causa 100% externa. Nenhuma solução rápida
+encontrada (local, Codespace, Docker) — detalhes completos em
+`00-gestao/memoria-execucao.md`, seção "Continuação (2026-08-19)".
+
+**Ação combinada:** construir um ambiente Supabase local (via Docker,
+`supabase start`) como plano B testado para próximas demonstrações,
+sem pressa, fora de uma chamada ao vivo. Ainda não iniciado.
 
 ## Regra geral
 

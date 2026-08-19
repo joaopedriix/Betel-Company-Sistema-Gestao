@@ -115,6 +115,20 @@ poder ser usado pelo cliente real (não é só "aguardando push")
   nova (agenda/tarefas/checklists) e da área de negócio — implementados
   e commitados localmente, mas ainda não validados nesta sessão além da
   leitura do código e da mensagem de commit.
+- **Ambiente de staging criado e API v1 validada** (2026-08-19):
+  projeto Supabase separado `betel-company-staging`, schema completo
+  aplicado do zero, integração via API (`/api/v1/eventos`,
+  `/api/v1/tarefas`) testada de ponta a ponta (401 sem chave, 200 com
+  chave válida e dados escopados). Ainda não aplicado em produção
+  (migration `0009_api_keys.sql` + GRANTs estreitos aguardando
+  autorização separada). Ver `04-analises/integracao-api.md` e
+  `04-analises/ambiente-staging.md`.
+- **Incidente externo do Supabase Auth** (2026-08-19): demonstração ao
+  vivo ao cliente comprometida por latência de 100+s no login,
+  confirmado como incidente público e ativo do Supabase
+  (`status.supabase.com`), fora do controle da equipe. Ver
+  `00-gestao/memoria-execucao.md` (seção "Continuação (2026-08-19) —
+  chaves de staging...") e `00-gestao/pendencias.md`.
 
 ## Próxima tarefa
 
@@ -218,15 +232,16 @@ poder ser usado pelo cliente real (não é só "aguardando push")
   fica só como "visualização pública sem login"
 - Deploy real (Vercel) e domínio — nenhuma decisão tomada ainda
 - Autorização explícita de push dos commits locais para o GitHub
-- Criar um projeto Supabase separado (staging/testes) para viabilizar
-  testes de integração/E2E automatizados e a validação de migrations
-  do zero (Fase 5) sem tocar produção — usuário rejeitou (2026-08-18)
-  ampliar GRANTs de `service_role` em produção como alternativa; ver
-  `00-gestao/riscos.md`
+- ~~Criar um projeto Supabase separado (staging/testes)~~ — **RESOLVIDO
+  2026-08-19**: `betel-company-staging` criado e schema aplicado do
+  zero (autorização explícita do usuário), destravando testes de
+  integração e a validação de migrations do zero (Fase 5).
+- Aplicar API v1 + migration `0009_api_keys.sql` (GRANTs estreitos de
+  `service_role`, só `SELECT` em 3 tabelas) em **produção** — validada
+  em staging, aguardando autorização separada.
 
 ## Última atualização
 
-2026-08-18 (reconciliado com o histórico real do git: R10 e R7
-corrigidos, R8/R9 auditados, onboarding guiado e navegação expandida
-implementados — este arquivo estava desatualizado em relação a esses
-commits)
+2026-08-19 (reconciliado com o histórico real do git — 33 commits à
+frente de `origin/main`, nenhum push: staging criado, API v1 validada
+em staging, incidente externo do Supabase registrado)
