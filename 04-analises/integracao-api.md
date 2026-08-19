@@ -63,6 +63,18 @@ em seguida), onde um GRANT amplo já é seguro por não haver dado real.
   gestão de chaves ainda, só a tabela e os endpoints de leitura.
 - Preço/plano associado ao acesso via API (fora do escopo técnico).
 
+## Validado em staging (2026-08-19)
+
+Testado de ponta a ponta contra `betel-company-staging` (chave e
+dados fictícios, removidos após o teste):
+
+- `GET /api/v1/eventos` sem `Authorization` → `401` `{"error":"Chave de
+  API inválida ou ausente."}`
+- `GET /api/v1/eventos` com chave válida → `200`, retorna só os eventos
+  da empresa dona da chave
+- `GET /api/v1/tarefas` com chave válida → `200`, lista vazia (sem
+  tarefas cadastradas ainda no fixture de teste)
+
 ## Estrutura implementada
 
 - `03-projeto-betel/database/proposals/0009_api_keys.sql` — migration

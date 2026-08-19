@@ -29,19 +29,18 @@
       `01-documentacao/requisitos/backlog.md`)
 - [x] Integração com Google Calendar — fora do escopo do MVP
 - [x] Integração com Apple Calendar — fora do escopo do MVP
-- [x] **Integração via API** — desenhada e implementada (v1) em
-      2026-08-19: autenticação por chave de API/empresa, só leitura,
-      `/api/v1/eventos` e `/api/v1/tarefas`. Ver
-      `04-analises/integracao-api.md`. Migration `0009_api_keys.sql`
-      **já aplicada em staging** (`betel-company-staging`), com os
-      GRANTs de `service_role` liberados lá (seguro, sem dado real).
-      Falta só copiar as chaves de API do staging pra um `.env` e
-      testar os endpoints de ponta a ponta (ver
-      `04-analises/ambiente-staging.md`). Produção continua exigindo
-      autorização separada pros GRANTs, mesmo sendo um escopo bem menor
-      que a proposta ampla já rejeitada. Rate limiting e tela de gestão
-      de chaves ainda não existem. Não prometer no material de
-      demonstração ao cliente enquanto não estiver validado.
+- [x] **Integração via API** — desenhada, implementada e **validada
+      de ponta a ponta em staging** em 2026-08-19: autenticação por
+      chave de API/empresa, só leitura, `/api/v1/eventos` e
+      `/api/v1/tarefas`. Sem chave → 401; com chave válida → 200,
+      dados corretamente escopados pela empresa. Ver
+      `04-analises/integracao-api.md`. **Ainda não aplicada em
+      produção** — precisa da migration `0009_api_keys.sql` e dos
+      GRANTs estreitos de `service_role` (só `SELECT` em 3 tabelas),
+      que exigem autorização separada antes de tocar produção. Rate
+      limiting e tela de gestão de chaves ainda não existem. Não
+      prometer no material de demonstração ao cliente enquanto não
+      estiver em produção.
 
 ## Financeiro
 
