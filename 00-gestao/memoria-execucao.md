@@ -115,3 +115,41 @@ e documentação pedida pelo próprio protocolo do projeto.
 ### Estado do Git ao final desta rodada
 27 commits locais à frente de `origin/main`, working tree limpo, nenhum
 push feito.
+
+---
+
+## Continuação (2026-08-19) — GRANT reconfirmado, API + staging autorizados
+
+Usuário reconfirmou cancelamento do GRANT amplo em produção (nada
+executado, arquivo `0008` nunca existiu commitado) e autorizou
+explicitamente seguir com integração via API e staging, nessa ordem.
+
+### O que foi executado
+- **Integração via API v1** desenhada e implementada: chave por
+  empresa (hash SHA-256), só leitura, `/api/v1/eventos` e
+  `/api/v1/tarefas`. Migration proposta `0009_api_keys.sql`. Ver
+  `04-analises/integracao-api.md`.
+- **Projeto Supabase de staging criado** (`betel-company-staging`,
+  mesma organização da produção, plano gratuito) após confirmação
+  explícita do usuário — o classificador de segurança tinha bloqueado
+  a criação até essa confirmação direta.
+- **Schema completo aplicado do zero em staging**, via SQL Editor
+  (schema, policies, grants, migrations 0002-0007, 0009 com GRANTs de
+  `service_role` liberados só ali). 12 tabelas confirmadas. Isso
+  também serve como a validação de "migrations do zero" (Fase 5).
+- Achado técnico: digitação simulada no editor Monaco corrompe texto
+  (autocomplete interfere); resolvido usando a API do Monaco
+  (`window.monaco.editor.getEditors()[0].getModel().setValue(...)`)
+  para setar o SQL diretamente, sem simular teclas — registrado em
+  `docs/learning/MISTAKES.md`.
+
+### O que não foi feito
+- **Copiar as chaves de API do staging (anon + service_role) e testar
+  os endpoints de ponta a ponta** — o classificador de segurança
+  bloqueou minha leitura da página de chaves do Supabase (evita expor
+  os valores no transcript da conversa). Só o usuário pode copiar essas
+  duas chaves. Ver `04-analises/ambiente-staging.md`.
+
+### Estado do Git ao final
+30 commits locais à frente de `origin/main`, working tree limpo, nenhum
+push feito.

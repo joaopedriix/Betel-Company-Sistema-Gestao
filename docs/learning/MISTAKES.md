@@ -3,6 +3,21 @@
 > Um bloco por erro real encontrado — não todo erro pequeno, só os que
 > deixam uma lição reaproveitável. Ver protocolo em `CLAUDE.md`.
 
+## Digitação simulada corrompe texto no editor Monaco (2026-08-19)
+
+**O quê:** ao aplicar SQL no SQL Editor do Supabase (baseado no Monaco)
+via automação de navegador, simular teclas uma a uma (`"-- focus check"`)
+resultou em texto corrompido — a palavra "check" desapareceu
+silenciosamente, sem erro visível. O autocomplete do editor intercepta
+teclas em certos momentos.
+
+**Lição:** para inserir texto grande/exato num editor baseado em Monaco
+via automação, não simular digitação — usar a própria API do editor:
+`window.monaco.editor.getEditors()[0].getModel().setValue(texto)`.
+Sempre conferir o tamanho/conteúdo do resultado (`model.getValue().length`)
+antes de rodar algo importante, já que digitação simulada pode falhar
+silenciosamente sem nenhum erro.
+
 ## Consulta aninhada do Supabase não retorna contagem certa (2026-08-19)
 
 **O quê:** `/checklists` usava
