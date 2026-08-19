@@ -233,17 +233,23 @@ poder ser usado pelo cliente real (não é só "aguardando push")
 
 ## Decisões aguardando aprovação
 
-- Se o portal do cliente com login entra nesta primeira versão do MVP ou
-  fica só como "visualização pública sem login"
-- Deploy real (Vercel) e domínio — nenhuma decisão tomada ainda
-- Autorização explícita de push dos commits locais para o GitHub
+- ~~Se o portal do cliente com login entra nesta primeira versão~~ —
+  **DECIDIDO 2026-08-19**: fica como stub, não desenvolver agora.
+- Deploy real (Vercel) e domínio — explicitamente adiado (aguardando
+  decisão futura).
+- Push dos commits locais — **decisão dada 2026-08-19** (executar),
+  sujeito a uma confirmação pontual final antes do comando real
+  (regra fixa desta rodada).
 - ~~Criar um projeto Supabase separado (staging/testes)~~ — **RESOLVIDO
   2026-08-19**: `betel-company-staging` criado e schema aplicado do
   zero (autorização explícita do usuário), destravando testes de
   integração e a validação de migrations do zero (Fase 5).
 - Aplicar API v1 + migration `0009_api_keys.sql` (GRANTs estreitos de
   `service_role`, só `SELECT` em 3 tabelas) em **produção** — validada
-  em staging, aguardando autorização separada.
+  em staging, **decisão dada 2026-08-19** (aplicar), sujeito a
+  confirmação pontual final antes de rodar contra o banco real.
+- ~~Sócio ver a Agenda?~~ — **DECIDIDO 2026-08-19**: sim, adicionada ao
+  menu e à rota permitida (`SOCIO_ROUTES`).
 
 ## Última atualização
 

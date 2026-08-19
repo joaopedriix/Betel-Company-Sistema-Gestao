@@ -38,6 +38,9 @@ export const NAV_BY_PERFIL: Record<Perfil, NavEntry[]> = {
       ],
     },
   ],
-  socio: [{ type: "link", label: "Minhas tarefas", href: "/minhas-tarefas" }],
+  socio: [
+    { type: "link", label: "Minhas tarefas", href: "/minhas-tarefas" },
+    { type: "link", label: "Agenda", href: "/agenda" },
+  ],
   cliente: [{ type: "link", label: "Portal do cliente", href: "/portal-cliente" }],
 };

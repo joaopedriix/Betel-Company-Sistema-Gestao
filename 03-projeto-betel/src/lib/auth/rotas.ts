@@ -15,7 +15,7 @@ export const ADMIN_ROUTES = [
   "/agenda",
 ] as const;
 
-export const SOCIO_ROUTES = ["/minhas-tarefas"] as const;
+export const SOCIO_ROUTES = ["/minhas-tarefas", "/agenda"] as const;
 
 export const CLIENTE_ROUTES = ["/portal-cliente"] as const;
 

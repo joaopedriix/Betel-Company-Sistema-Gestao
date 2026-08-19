@@ -78,7 +78,8 @@
       `01-documentacao/perfis-de-usuario/perfis-iniciais.md`.
 - [x] Quem poderá visualizar cada informação — RESOLVIDO para o MVP, ver
       mesmo arquivo acima e `01-documentacao/regras-de-negocio/regras-iniciais.md`.
-- [ ] Se haverá clientes com mais de um evento
+- [x] Se haverá clientes com mais de um evento — CONFIRMADO 2026-08-19:
+      sim, modelagem 1:N (um cliente, vários eventos) mantida como está.
 - [x] Regras exatas do portal do cliente (o que o cliente vê/edita) —
       RESOLVIDO para o MVP: cliente só vê dados/contratos/eventos próprios,
       progresso geral e etapas do checklist marcadas como públicas; não vê

@@ -44,22 +44,55 @@ configuração.**
   funcional. Confirmado: Node `v22.23.2`, npm `10.9.8`, `.env.local`
   intacto, `npm install` concluído sem erro (650 pacotes).
 
-### Caminhos possíveis, ainda não tentados
+### Tentativa 3 — máquina maior (2026-08-19, mesmo dia)
 
-1. Tentar de novo numa máquina maior (`standardLinux32gb`, 4
-   cores/16GB) — pode ter mais chance de suportar a virtualização
-   necessária, mas não há garantia, e pode não estar coberta pelo
-   plano gratuito de Codespaces da conta.
-2. Tentar habilitar via "Rebuild Container" pela interface web do
-   GitHub Codespaces ou pelo VS Code, em vez da CLI `gh` — pode dar
-   uma mensagem de erro mais específica sobre a causa real da falha
-   de `buildx`.
-3. Desistir do Docker local/Codespace como plano B e usar só o
-   ambiente de staging (`betel-company-staging`, já criado e saudável
-   — ver `04-analises/ambiente-staging.md`) como alternativa de teste
-   sempre que a produção estiver instável.
+Testado o caminho 1 acima: Codespace atualizado de `basicLinux32gb`
+(2 cores/8GB) para `standardLinux32gb` (4 cores/16GB) via
+`gh codespace edit -m standardLinux32gb`, depois nova tentativa de
+`docker-in-docker` com rebuild `--full`.
+
+**Resultado: falhou com o erro exatamente idêntico** —
+`docker buildx build` → `Error code: 1302
+(UnifiedContainersErrorFatalCreatingContainer)`. Mesmo comando, mesma
+mensagem, byte a byte. Isso descarta a hipótese de nested
+virtualization/tamanho de máquina como causa: o problema está em como
+o `docker buildx` roda na infraestrutura de build de features do
+Codespaces para esta conta/ambiente, não no hardware da VM. O log de
+criação não expõe o stderr real do `buildx` (só o "Command failed"
+genérico), então a causa exata de fundo permanece desconhecida sem
+acesso a logs mais profundos da plataforma Codespaces (fora do nosso
+alcance).
+
+Revertido de novo (`.devcontainer/devcontainer.json` sem a feature),
+ambiente restaurado e confirmado funcional (Node `v22.23.2`, npm
+`10.9.8`, `.env.local` intacto).
+
+## Conclusão — Docker local/Codespace descartado
+
+**Docker como plano B de demonstração não é viável neste ambiente,
+com as ferramentas disponíveis hoje.** Duas tentativas completas
+(máquina padrão e máquina maior) falharam com erro idêntico de
+infraestrutura (`1302`), não relacionado a configuração do projeto.
+Não tentar de novo sem uma pista nova (ex.: suporte do GitHub
+confirmando causa, ou tentativa manual pela interface web/VS Code que
+exponha um erro mais específico — caminho 2 abaixo, ainda não
+testado e de baixa prioridade).
+
+### Caminho ainda não tentado (baixa prioridade)
+
+Habilitar via "Rebuild Container" pela interface web do GitHub
+Codespaces ou pelo VS Code, em vez da CLI `gh` — pode (ou não) dar uma
+mensagem de erro mais específica sobre a causa real da falha de
+`buildx`. Não é uma prioridade dado que já são 2 tentativas
+fracassadas por uma causa que parece ser de plataforma, não de
+configuração.
 
 ## Estado atual — o que existe de fato como contingência
+
+**Staging (`betel-company-staging`) é o ambiente de teste principal e
+único disponível hoje** — saudável, independente da produção, testado
+e funcionando. Não usar Docker/Supabase local como dependência de
+nenhum fluxo até uma decisão nova.
 
 - **Ambiente de staging** (`betel-company-staging`): projeto Supabase
   separado, schema completo aplicado, saudável e testado
