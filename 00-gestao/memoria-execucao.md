@@ -259,3 +259,100 @@ desenvolvimento em paralelo pelas frentes que não dependem de auth ao
 vivo (revisão de código, documentação, preparação do ambiente local
 de Docker como plano B). Não repetir tentativas de login ao vivo até
 `status.supabase.com` confirmar normalização.
+
+---
+
+## Continuação (2026-08-19) — plano de continuidade executado (auditoria, focus trap, tentativa de Docker no Codespace)
+
+Execução do prompt "TAREFA: Executar plano de continuidade", em ordem.
+
+### 1. Auditoria git (só leitura)
+Confirmado: nenhum arquivo `0008` de GRANT existe (nem commitado, nem
+solto) — só referências históricas em documentação. 33 commits locais
+à frente de `origin/main` no início, nenhum push feito.
+
+### 2. Documentação corrigida
+`status-atual.md` reconciliado com staging/API v1/incidente;
+`pendencias.md` ganhou seção única consolidando todas as decisões em
+aberto.
+
+### 3. Qualidade — tudo limpo
+`lint`, `build`, 43/43 testes unitários, `git diff --check` (só avisos
+de CRLF, sem erro real).
+
+### 4. Focus trap no drawer mobile — implementado
+`Sidebar`: `Tab`/`Shift+Tab` preso dentro do menu aberto, foco inicial
+no botão fechar, foco devolvido ao botão que abriu o menu ao fechar.
+Lint/build limpos depois. **Teste visual em viewport mobile real não
+foi possível** — bloqueado pelo mesmo incidente do Supabase (ver
+abaixo, item 5).
+
+### 5. Testar error/loading/not-found no navegador — bloqueado
+Confirmado no código (`middleware.ts`): o middleware roda em **todas**
+as rotas (matcher cobre tudo, inclusive 404) e chama
+`updateSession()` → `supabase.auth.getUser()` — a mesma chamada que
+está travando 100+s no incidente. Ou seja, hoje **nenhuma** rota do
+app é alcançável para teste, nem `not-found.tsx`. Não é um bug do
+código, é o incidente externo ainda ativo.
+
+### 6. Staging — saúde confirmada, suíte completa não executada
+`curl` no health check do staging respondeu em 0,35s (saudável,
+independente do incidente de produção). A suíte completa dos 27 testes
+de isolamento (fixture já existe em `database/fixtures/`) **não foi
+executada** nesta rodada — exige criar 6 contas via Admin API + seed
+SQL + 27 casos manuais com múltiplos logins, desproporcional para
+encaixar numa tarefa de continuidade. Registrado como pendência para
+sessão dedicada.
+
+### 7. Plano B Docker — tentado, bloqueado por limitação de ferramenta
+Usuário corrigiu o rumo: Docker deveria ser habilitado **no Codespace
+do projeto**, não na máquina local (parei a tentativa local em
+andamento e limpei o `supabase init` feito ali). Sequência:
+- `.devcontainer/devcontainer.json` do Codespace `expert-goggles-...`
+  não tinha a feature `docker-in-docker` — adicionada, commitada
+  (`e83979c`), sincronizada via bundle (sem push).
+- Antes de reconstruir, confirmei com o usuário se a demonstração ao
+  vivo já tinha terminado (rebuild derruba a sessão/porta pública) —
+  confirmado que sim.
+- `gh codespace rebuild` (simples e depois `--full`) no
+  `expert-goggles-...`: Docker continuou ausente nos dois casos.
+- Recriação do zero (`gh codespace delete` + `create -b main`):
+  revelou a causa raiz — como nunca fazemos `push`, `origin/main` no
+  GitHub ainda tinha o `devcontainer.json` **antigo**, e
+  `codespace create` clona do GitHub, não da máquina local. Corrigido
+  sincronizando o bundle pro codespace novo (`super-space-memory-...`)
+  e rodando `rebuild --full` nele — **Docker continuou ausente mesmo
+  assim**, confirmando que o `gh codespace rebuild` via CLI não
+  reprocessa features de devcontainer de forma confiável, independente
+  de rebuild simples, `--full`, ou recriação.
+- **Causa raiz real, encontrada depois** (lendo o log de criação do
+  Codespace, `/workspaces/.codespaces/.persistedshare/creation.log`):
+  não era limitação da CLI — o build do container **falhava de
+  verdade** (`docker buildx build`, erro `1302
+  UnifiedContainersErrorFatalCreatingContainer`) ao processar a
+  feature `docker-in-docker`, e o Codespaces caía **silenciosamente**
+  para um "container de recuperação" mínimo (Alpine, sem Node, sem
+  npm, sem Docker) — por isso nada funcionava, nem o próprio Node.
+  Prova concreta encontrada só depois de reverter: `npm install`
+  retornava `npm: command not found` mesmo em shell de login.
+- **Ação corretiva:** revertido `docker-in-docker` do
+  `devcontainer.json` (commit `02ea318`), sincronizado (bundle, sem
+  push) e reconstruído (`rebuild --full`) — Node/npm confirmados de
+  volta (`v22.23.2`/`10.9.8`), `.env.local` intacto. `npm install`
+  disparado para deixar o Codespace utilizável de novo.
+- **Conclusão:** Docker no Codespace **não é simplesmente uma questão
+  de reprocessar features** — a instalação da feature
+  `docker-in-docker` falha de fato nesse ambiente/conta (possível
+  causa: nested virtualization não suportada na máquina
+  `basicLinux32gb`/`standardLinux32gb` deste plano de Codespaces).
+  Registrado em `pendencias.md` como investigação separada, não como
+  simples "rebuild manual pendente".
+- `.env.local` de produção salvo em backup local antes de apagar o
+  Codespace antigo, e restaurado no novo (`super-space-memory-...`) —
+  confirmado 11 linhas, igual ao original. `npm install` disparado no
+  Codespace novo para deixá-lo pronto para uso assim que o usuário
+  fizer o rebuild manual.
+
+### Estado do Git ao final
+Commit `e83979c` local, sincronizado (via bundle, sem push) em ambos
+os Codespaces que existiram nesta etapa. Nenhum push feito.

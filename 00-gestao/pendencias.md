@@ -34,9 +34,33 @@
     múltiplos logins) — não executado nesta rodada por ser
     desproporcional a uma tarefa de continuidade; sugiro sessão
     dedicada.
-11. **Plano B — Supabase local via Docker**: em construção nesta
-    sessão (`supabase start` rodando), sem risco à sessão do Codespace.
-    Assim que pronto, será registrado aqui como resolvido.
+11. **Plano B — Supabase local via Docker no Codespace**: bloqueado
+    por falha real de infraestrutura, não por limitação de ferramenta.
+    Tentei habilitar a feature `docker-in-docker` no
+    `.devcontainer/devcontainer.json` — em **todas** as tentativas
+    (rebuild simples, `--full`, recriação do zero em 2 codespaces
+    diferentes) o build do container falhou de verdade (log:
+    `docker buildx build` → erro `1302
+    UnifiedContainersErrorFatalCreatingContainer`), e o Codespaces caiu
+    silenciosamente para um container de recuperação sem Node/npm/Docker
+    — o ambiente ficou temporariamente inutilizável. **Já revertido**
+    (commit `02ea318`): Codespace de volta ao normal, Node/npm
+    confirmados, `.env.local` intacto.
+    **Hipótese da causa:** a máquina do Codespace (`basicLinux32gb`)
+    pode não suportar nested virtualization, exigido pelo
+    `docker-in-docker`. **Precisa da sua decisão**: (a) tentar de novo
+    numa máquina maior (`standardLinux32gb`, 4 cores/16GB — pode ter
+    mais chance, mas não é garantido, e o plano gratuito pode não
+    cobrir); (b) tentar habilitar Docker pela interface web/VS Code
+    (pode dar mensagem de erro mais clara que a CLI); ou (c) desistir
+    do Docker-no-Codespace e usar só o Supabase de staging (já
+    saudável e funcionando) como ambiente de teste, sem Supabase local.
+    **Efeito colateral já ocorrido:** o Codespace antigo
+    (`expert-goggles-...`, usado na demonstração) foi apagado nesse
+    processo — o atual é `super-space-memory-qvv747jqpx7p29x5q`, URL
+    `https://super-space-memory-qvv747jqpx7p29x5q-3000.app.github.dev`
+    (porta ainda não testada como pública). `.env.local` de produção
+    restaurado nele (backup feito antes de apagar o antigo).
 
 > Lista de perguntas que precisam ser respondidas antes de avançar em
 > funcionalidades, banco de dados definitivo ou integrações reais.
