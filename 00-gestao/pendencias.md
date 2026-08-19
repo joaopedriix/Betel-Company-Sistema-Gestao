@@ -66,6 +66,33 @@
 - [x] Autenticação (mecanismo definitivo) — APROVADO: Supabase Auth,
       inclusive para o cliente (login próprio)
 
+## [2026-08-19] — Aguardando aprovação
+
+- **Tarefa:** criar um novo projeto Supabase (staging/testes), separado
+  de produção.
+- **Motivo do bloqueio:** o classificador de segurança automático
+  bloqueou a navegação para a página de criação de projeto no
+  dashboard do Supabase — mesmo com a autorização geral dada ("pode
+  seguir também com staging"), criar um projeto novo é abrir uma conta/
+  recurso de serviço externo (possível vínculo com organização/
+  cobrança), e as regras da sessão pedem para eu pular e registrar
+  esse tipo de ação em vez de executar sozinho.
+- **Risco:** baixo tecnicamente (projeto novo, isolado, não toca
+  produção), mas a criação em si (escolha de organização, plano,
+  eventual cobrança futura se sair do free tier) é uma decisão de
+  conta que prefiro confirmar direto com você antes de clicar.
+- **Decisão necessária:** confirmar que posso criar um projeto Supabase
+  novo (plano gratuito) na mesma organização usada para o de produção,
+  com um nome como `betel-company-staging`.
+- **Alternativa segura executada:** a migration proposta
+  (`database/proposals/0009_api_keys.sql`) e o código da integração via
+  API (`src/lib/api/auth.ts`, `src/app/api/v1/*`) já estão prontos e
+  testados (lint/build/testes) — só faltam um banco pra rodar contra.
+- **Próximo passo recomendado:** com sua confirmação (ou você mesmo
+  criando o projeto e me passando URL/chaves), aplico
+  schema+policies+grants+migrations (incluindo a 0009) no staging e
+  valido a API e os testes de integração de ponta a ponta.
+
 ## Regra geral
 
 Nenhuma decisão acima deve ser assumida como resposta padrão. Cada uma
