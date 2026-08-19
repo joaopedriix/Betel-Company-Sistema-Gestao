@@ -32,15 +32,16 @@
 - [x] **Integração via API** — desenhada e implementada (v1) em
       2026-08-19: autenticação por chave de API/empresa, só leitura,
       `/api/v1/eventos` e `/api/v1/tarefas`. Ver
-      `04-analises/integracao-api.md`. **Ainda não funcional em nenhum
-      ambiente** — falta aplicar a migration `0009_api_keys.sql`
-      (proposta, não aplicada) e os GRANTs estreitos de `service_role`
-      (`SELECT` só em `api_key`/`evento`/`tarefa_evento`) — serão
-      aplicados primeiro em staging pra validar; produção precisa de
-      autorização separada, mesmo sendo um escopo bem menor que a
-      proposta ampla já rejeitada. Rate limiting e tela de gestão de
-      chaves ainda não existem. Não prometer no material de
-      demonstração ao cliente enquanto não estiver validado em staging.
+      `04-analises/integracao-api.md`. Migration `0009_api_keys.sql`
+      **já aplicada em staging** (`betel-company-staging`), com os
+      GRANTs de `service_role` liberados lá (seguro, sem dado real).
+      Falta só copiar as chaves de API do staging pra um `.env` e
+      testar os endpoints de ponta a ponta (ver
+      `04-analises/ambiente-staging.md`). Produção continua exigindo
+      autorização separada pros GRANTs, mesmo sendo um escopo bem menor
+      que a proposta ampla já rejeitada. Rate limiting e tela de gestão
+      de chaves ainda não existem. Não prometer no material de
+      demonstração ao cliente enquanto não estiver validado.
 
 ## Financeiro
 
@@ -66,32 +67,23 @@
 - [x] Autenticação (mecanismo definitivo) — APROVADO: Supabase Auth,
       inclusive para o cliente (login próprio)
 
-## [2026-08-19] — Aguardando aprovação
+## [2026-08-19] — Resolvido: projeto de staging criado
 
-- **Tarefa:** criar um novo projeto Supabase (staging/testes), separado
-  de produção.
-- **Motivo do bloqueio:** o classificador de segurança automático
-  bloqueou a navegação para a página de criação de projeto no
-  dashboard do Supabase — mesmo com a autorização geral dada ("pode
-  seguir também com staging"), criar um projeto novo é abrir uma conta/
-  recurso de serviço externo (possível vínculo com organização/
-  cobrança), e as regras da sessão pedem para eu pular e registrar
-  esse tipo de ação em vez de executar sozinho.
-- **Risco:** baixo tecnicamente (projeto novo, isolado, não toca
-  produção), mas a criação em si (escolha de organização, plano,
-  eventual cobrança futura se sair do free tier) é uma decisão de
-  conta que prefiro confirmar direto com você antes de clicar.
-- **Decisão necessária:** confirmar que posso criar um projeto Supabase
-  novo (plano gratuito) na mesma organização usada para o de produção,
-  com um nome como `betel-company-staging`.
-- **Alternativa segura executada:** a migration proposta
-  (`database/proposals/0009_api_keys.sql`) e o código da integração via
-  API (`src/lib/api/auth.ts`, `src/app/api/v1/*`) já estão prontos e
-  testados (lint/build/testes) — só faltam um banco pra rodar contra.
-- **Próximo passo recomendado:** com sua confirmação (ou você mesmo
-  criando o projeto e me passando URL/chaves), aplico
-  schema+policies+grants+migrations (incluindo a 0009) no staging e
-  valido a API e os testes de integração de ponta a ponta.
+Você autorizou explicitamente ("pode criar o projeto Supabase de
+staging, autorizado") depois do classificador ter pedido confirmação.
+Projeto `betel-company-staging` criado na mesma organização da
+produção (`DevSoldier`, plano gratuito), schema completo aplicado
+(schema, policies, grants, migrations 0002-0007 e 0009). Detalhes em
+`04-analises/ambiente-staging.md`.
+
+**Único passo restante — precisa ser feito por você (não por mim):**
+copiar a `anon key` e a `service_role key` de
+`Project Settings > API Keys` do projeto `betel-company-staging` (o
+classificador de segurança bloqueou minha leitura automática dessa
+página, pra evitar que os valores aparecessem no transcript da
+conversa — proteção correta). Com essas duas chaves eu configuro o
+ambiente de teste e valido a integração via API e os testes de
+integração de ponta a ponta.
 
 ## Regra geral
 
