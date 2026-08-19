@@ -76,3 +76,42 @@ NÃO PRONTO PARA PRODUÇÃO
 Apresentar a demonstração ao cliente usando
 `docs/roteiro-demonstracao-cliente.md`; só depois decidir sobre
 staging.
+
+---
+
+## Sessão adicional (2026-08-19, madrugada) — tarefas seguras sem autorização
+
+Usuário pediu para continuar só com tarefas seguras (sem permissão
+necessária) enquanto dormia. Nada do escopo congelado foi expandido —
+só correções de lacunas já identificadas em `04-analises/melhorias-ux.md`
+e documentação pedida pelo próprio protocolo do projeto.
+
+### O que foi executado
+- `docs/learning/MISTAKES.md` e `docs/learning/LESSONS.md` criados
+  (referenciados em `LEARNING.md`/`CLAUDE.md`, mas nunca existiam) —
+  4 erros reais + 4 lições conceituais desta sessão.
+- Drawer mobile da sidebar agora fecha com `Escape` (mesmo padrão do
+  tour de onboarding). Foco ainda não é preso dentro do menu — não
+  corrigido (precisa de teste real em viewport mobile).
+- `loading.tsx`, `error.tsx`, `not-found.tsx` adicionados na raiz do
+  app — nenhuma rota tinha isso antes, caía tudo na tela genérica do
+  Next.js. Não testados no navegador (só lint/build).
+- `04-analises/melhorias-ux.md` atualizado: itens 2, 3 e 4 marcados
+  como corrigidos.
+- Regressão completa após cada mudança: lint, build, 43 testes
+  unitários — todos limpos o tempo todo.
+
+### O que não foi feito (exige decisão/autorização do usuário)
+- Criar projeto Supabase de staging.
+- Decidir se sócio vê a Agenda.
+- Desenhar/implementar integração via API.
+- Breadcrumbs e título de página por rota — deixados como "melhoria
+  futura" (baixa prioridade, risco de virar "melhoria cosmética
+  extensa" fora do escopo congelado).
+- Testar loading/error/not-found no navegador — precisa forçar erro/404
+  de propósito, melhor numa sessão com o Codespace ativo e o usuário
+  presente.
+
+### Estado do Git ao final desta rodada
+27 commits locais à frente de `origin/main`, working tree limpo, nenhum
+push feito.
