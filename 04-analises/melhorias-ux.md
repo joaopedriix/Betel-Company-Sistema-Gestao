@@ -23,14 +23,12 @@
 
 ## Necessário antes de produção (uso real)
 
-3. **Nenhum `loading.tsx`/`error.tsx`/`not-found.tsx` em nenhuma rota
-   [código]** — convenção do Next.js App Router para estado de
-   carregamento, erro de renderização e 404 não é usada em nenhuma
-   página. Hoje: uma query lenta não mostra nenhum feedback visual
-   (tela parece travada até o Server Component terminar); um erro não
-   tratado em Server Component cai na tela de erro padrão do Next
-   (não a marca do produto); uma URL inválida cai no 404 genérico do
-   Next.
+3. ~~Nenhum `loading.tsx`/`error.tsx`/`not-found.tsx` em nenhuma rota~~
+   — **corrigido em 2026-08-19**: adicionados na raiz do app
+   (`src/app/loading.tsx`, `error.tsx`, `not-found.tsx`), com o mesmo
+   estilo visual das demais telas. Não testado no navegador ainda
+   (precisa forçar erro/404 de propósito numa sessão com Codespace
+   ativo).
 4. ~~Aplicar o mesmo padrão de tratamento de erro~~ — feito junto com o
    item 2 (`/agenda` e `/checklists` não fazem queries que possam falhar
    do mesmo jeito — só leitura simples — então não precisavam do mesmo
