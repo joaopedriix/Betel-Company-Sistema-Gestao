@@ -29,12 +29,18 @@
       `01-documentacao/requisitos/backlog.md`)
 - [x] Integração com Google Calendar — fora do escopo do MVP
 - [x] Integração com Apple Calendar — fora do escopo do MVP
-- [ ] **Integração via API** (pedido do usuário, 2026-08-18) — requisito
-      novo de produto/arquitetura. Falta definir: autenticação (API key
-      por empresa? OAuth?), escopo (só leitura ou também escrita), quais
-      recursos expor (contratos, eventos, tarefas, checklist), rate
-      limiting, versionamento. Não prometer no material de demonstração
-      ao cliente enquanto não existir de fato.
+- [x] **Integração via API** — desenhada e implementada (v1) em
+      2026-08-19: autenticação por chave de API/empresa, só leitura,
+      `/api/v1/eventos` e `/api/v1/tarefas`. Ver
+      `04-analises/integracao-api.md`. **Ainda não funcional em nenhum
+      ambiente** — falta aplicar a migration `0009_api_keys.sql`
+      (proposta, não aplicada) e os GRANTs estreitos de `service_role`
+      (`SELECT` só em `api_key`/`evento`/`tarefa_evento`) — serão
+      aplicados primeiro em staging pra validar; produção precisa de
+      autorização separada, mesmo sendo um escopo bem menor que a
+      proposta ampla já rejeitada. Rate limiting e tela de gestão de
+      chaves ainda não existem. Não prometer no material de
+      demonstração ao cliente enquanto não estiver validado em staging.
 
 ## Financeiro
 
