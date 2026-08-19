@@ -356,3 +356,57 @@ andamento e limpei o `supabase init` feito ali). Sequência:
 ### Estado do Git ao final
 Commit `e83979c` local, sincronizado (via bundle, sem push) em ambos
 os Codespaces que existiram nesta etapa. Nenhum push feito.
+
+---
+
+## Continuação (2026-08-19) — Docker no Codespace (causa raiz + revert), incidente resolvido, testes de UX
+
+### 1. Verificação da premissa "Docker via Codespace confirmado em uso"
+Não era verdade — testado direto (`docker: command not found`),
+confirmando o estado já registrado na rodada anterior (feature
+revertida por falha real de build). Não insisti de novo, conforme
+regra "se falhar, parar e reportar".
+
+### 2. Parte B executada
+- Backup do `.env.local` de produção confirmado (11 linhas, igual ao
+  original) antes de qualquer ação.
+- Senha do admin exposta: **não resolvido** — não há como identificar
+  a conta admin com segurança sem acessar `usuario` (sem GRANT) ou sem
+  o usuário informar o e-mail. Registrado como pendência com
+  recomendação (usuário troca pelo painel, testa recuperação por
+  e-mail ao mesmo tempo).
+- Qualidade: lint, build, 43/43 testes, `git diff --check` — tudo
+  limpo.
+- **Incidente do Supabase confirmado RESOLVIDO**: latência caiu de
+  100+s para 0,4-0,5s (3 medições seguidas), Supabase confirmou fix
+  publicado em `status.supabase.com`.
+- Dev server iniciado no Codespace atual; `not-found.tsx` testado e
+  confirmado com evidência visual (screenshot); `error.tsx` já tinha
+  evidência real de produção (visto pelo usuário durante o incidente).
+  Focus trap do drawer mobile e `loading.tsx` **não testados** — exigem
+  login, que não faço (nunca digito senha). Registrado como pendência.
+- Item 8 (IDs dos dados fictícios): bloqueado pelo classificador de
+  segurança ao tentar abrir o SQL Editor de produção sem autorização
+  explícita para essa ação pontual nesta tarefa — respeitado, não
+  contornado.
+- `docs/plano-b-demonstracao.md` criado, documentando as tentativas de
+  Docker (local e Codespace) e o estado real da contingência (staging
+  saudável, Docker indisponível).
+
+### O que não foi feito
+- Troca da senha do admin (precisa do e-mail da conta ou ação direta
+  do usuário).
+- IDs exatos dos dados fictícios (precisa de autorização para SQL de
+  produção).
+- Focus trap e `loading.tsx` em navegador (precisa de login do
+  usuário).
+- Parte C (decisões do usuário) — apenas listada, não executada,
+  conforme instrução.
+
+### Estado do produto
+```
+INCIDENTE DO SUPABASE RESOLVIDO — sistema acessível normalmente
+CODESPACE ATUAL FUNCIONAL (Node/npm/dev server OK, sem Docker)
+PRONTO PARA DEMONSTRAÇÃO CONTROLADA
+NÃO PRONTO PARA PRODUÇÃO
+```

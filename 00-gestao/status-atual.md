@@ -126,9 +126,14 @@ poder ser usado pelo cliente real (não é só "aguardando push")
 - **Incidente externo do Supabase Auth** (2026-08-19): demonstração ao
   vivo ao cliente comprometida por latência de 100+s no login,
   confirmado como incidente público e ativo do Supabase
-  (`status.supabase.com`), fora do controle da equipe. Ver
-  `00-gestao/memoria-execucao.md` (seção "Continuação (2026-08-19) —
-  chaves de staging...") e `00-gestao/pendencias.md`.
+  (`status.supabase.com`), fora do controle da equipe. **RESOLVIDO**
+  no mesmo dia — latência normalizada para 0,4-0,5s, confirmado com
+  múltiplas medições e fix publicado pelo Supabase. Ver
+  `00-gestao/memoria-execucao.md`.
+- **Tentativa de Docker no Codespace como plano B** (2026-08-19): não
+  funcionou — falha real de build (`docker buildx`, erro 1302),
+  revertida com segurança. Detalhes e caminhos possíveis em
+  `docs/plano-b-demonstracao.md`.
 
 ## Próxima tarefa
 

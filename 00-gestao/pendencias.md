@@ -146,6 +146,44 @@ conversa — proteção correta). Com essas duas chaves eu configuro o
 ambiente de teste e valido a integração via API e os testes de
 integração de ponta a ponta.
 
+## [2026-08-19] — RESOLVIDO: incidente externo do Supabase
+
+Normalizado: latência do endpoint de auth caiu de 100+s para 0,4-0,5s
+consistente (3 medições seguidas), Supabase confirmou fix implantado
+em `status.supabase.com`. Login e navegação testados de novo no
+Codespace atual (`super-space-memory-...`) e funcionando normalmente.
+Ver `docs/plano-b-demonstracao.md` para o registro completo das
+tentativas de contingência.
+
+## [2026-08-19] — Aberto: testes de UX que exigem login (não posso fazer sozinho)
+
+Com o incidente resolvido, `not-found.tsx` foi confirmado com
+evidência visual (screenshot). `error.tsx` já tem evidência real de
+produção (apareceu durante o próprio incidente). Faltam dois testes
+que só acontecem **depois do login** (dashboard, sidebar) — e eu nunca
+digito senha, por política. Pendente: você logar uma vez no Codespace
+atual (`https://super-space-memory-qvv747jqpx7p29x5q-3000.app.github.dev`)
+e avisar, para eu confirmar o focus trap do drawer mobile e o
+`loading.tsx` em navegação real.
+
+## [2026-08-19] — Aberto: IDs dos dados fictícios (item 8)
+
+`docs/dados-demo.md` já lista os registros por nome/e-mail. Os UUIDs
+exatos exigiriam consulta SQL direta em produção (SQL Editor), que o
+classificador de segurança bloqueou por falta de autorização explícita
+para esta ação específica nesta tarefa. Se quiser os IDs agora, preciso
+de autorização explícita para essa leitura pontual (só leitura, sem
+alterar nada).
+
+## [2026-08-19] — Aberto: identificar conta do admin (item 6)
+
+Não consigo identificar com segurança qual conta é a do admin sem
+acessar a tabela `usuario` (sem GRANT para `service_role`, por
+desenho) ou sem você informar o e-mail. Ação mais segura: você mesmo
+troca a senha pelo painel do Supabase (Authentication → Users → conta
+admin → gerar nova senha ou enviar link de recuperação) — isso também
+testa o fluxo de recuperação por e-mail.
+
 ## [2026-08-19] — Aberto: incidente externo do Supabase durante demo ao vivo
 
 Durante demonstração ao vivo ao cliente, login/autenticação ficou
